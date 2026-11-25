@@ -1,0 +1,18 @@
+# ACD / FFmpeg 大产物包 · 校验清单
+# 生成: 2026-11-24 18:40
+# FFmpeg commit: 818cecc6e1afab932cf4d40ef0d7b8cd40311a17  (n9.1-dev-1030-g818cecc6e1)
+# 图锚点(报告体依据): d690c09ef8f148091e95871452a77259 (2026-11-11；本机已不存)
+# 图锚点(本包实物):   b357bf8ea8a4b6bae4892ab99254bf2a (2026-11-14)
+graph_md5_expected: b357bf8ea8a4b6bae4892ab99254bf2a
+
+file                            bytes  md5
+acd_graph.json              106072639  b357bf8ea8a4b6bae4892ab99254bf2a
+denominator.json                 1955  1da5867bafdede493bb3901e4bd7c4a5
+target_set.json               1285383  5633cb3add38fe2210ad09128b627526
+
+# 分母说明：包内为【脱敏分发版】（已移除审计/署名/本机路径字段，values 未改）。
+#   审计原件 7,366 B / 616cb5e3c20c0671f9f5d63566997f72，与包内数值逐字段一致，不随包分发。
+
+# 运行时可执行产物：本包【不】分发，仅登记指纹
+acd_trace_demo.exe          127803326  2b0d51c1b58577a0944b7143fdb33e98
+note: 121.9MB 可执行文件，含编译后的 FFmpeg 二进制；复现请自行跑 D 层管道（约 3.3–3.6 小时）。

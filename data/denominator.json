@@ -1,0 +1,41 @@
+{
+ "graph_md5": "b357bf8ea8a4b6bae4892ab99254bf2a",
+ "graph_mtime": "2026-11-14T18:04:37.609690",
+ "values": {
+  "instrumentable": 31305,
+  "macro": 95,
+  "unused": 7,
+  "ffprobe": 95,
+  "real_denom": 31108,
+  "touched": 15571,
+  "nt": 15598,
+  "SIMD": 1223,
+  "no_inbound_non_simd": 6232,
+  "with_inbound_in_nt": 8143,
+  "total_nodes": 38697,
+  "with_file_map": 36099,
+  "no_file_map": 2598,
+  "without_inbound": 13430,
+  "with_inbound_all": 25267,
+  "noin_instrumentable": 7239
+ },
+ "values_basis": "edges.keys()（图内 caller 侧节点；callees-only 节点不计入本块）",
+ "definitions": {
+  "total_nodes": "图内全部节点 = len(edges.keys())（caller 侧；callees-only 见 c_layer_target）",
+  "with_file_map": "有 file_map 的节点（≈可插桩，含汇编）",
+  "instrumentable": "有 file_map 且非汇编（C 定义，可插桩）",
+  "no_file_map": "无 file_map（注册符号/宏产物/汇编）",
+  "without_inbound": "无入边节点（static+runtime+asm+reg 均无）",
+  "with_inbound": "有入边节点",
+  "noin_instrumentable": "无入边 且 可插桩（≈函数指针表成员候选）",
+  "total_nodes_graph": "图论节点 = caller ∪ callee（callees-only 已计入）",
+  "nt": "real_denom \\ touched（集合差，非数值差）—— 即 real_denom 中未被 D 层 trace 命中的 identity",
+  "SIMD": "nt 中裸名命中 asm_capstone_map（merged_map ∪ source_map）的 identity 数",
+  "no_inbound_non_simd": "nt − SIMD 中无入边的 identity 数（= nt − SIMD − with_inbound_in_nt）",
+  "with_inbound_in_nt": "nt − SIMD 中有入边的 identity 数"
+ },
+ "caliber_version": "identity-v2",
+ "generated_at": "2026-11-15T18:39:45.474722",
+ "recomputed_at": "2026-11-15T18:39:45.474722",
+ "_distribution_note": "对外分发版：仅保留口径定义与数值，内部审计与人员署名字段已移除；values 与 definitions 未作任何修改。"
+}

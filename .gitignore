@@ -1,0 +1,43 @@
+# ---- 全图与源码绝不进 git（注意：data/ 下的小文件要入库，别用裸名挡）----
+acd_graph.json
+*.json.bak*
+*.bak_*
+release/denominator.json
+release/target_set.json
+ffmpeg-src/
+ffmpeg-build/
+*.o
+*.exe
+*.obj
+*.a
+*.lib
+
+# ---- 构建与缓存 ----
+__pycache__/
+*.pyc
+.pytest_cache/
+.cache/
+build/
+dist/
+
+# ---- 编辑器与系统 ----
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# ---- 本地与私密 ----
+.env
+secrets/
+*.key
+*.pem
+*_local.*
+# 本地工作备忘（含本机路径，保留在文件夹但不入库）
+备忘.txt
+# 本机启动快捷方式（内含绝对路径，只对这台机器有意义）
+*.lnk
+
+# ---- 大产物包：只在本地，永不入 git ----
+release/*.zip
+release/*.7z

@@ -1,0 +1,848 @@
+{
+ "_doc": "三份剔除名单：从分母里扣掉的 macro / unused(配置未启用) / ffprobe 文件。配合 data/denominator.json 与 scripts/denominator_recompute.py 可完整复算 31,305 与 15,571。",
+ "graph_md5_build": "d690c09ef8f148091e95871452a77259",
+ "graph_md5_current_note": "本名单在 2026-11-11 建图 d690c09e 上产出；2026-11-14 同一次建图的文件被重写（+279 B，仅跨语言元数据），md5 变为 b357bf8e，聚合值逐项一致。名单内容与 md5 漂移无关。",
+ "caliber": "分母链定义见 docs/caliber.md §2.7；隐性口径（identity 去重、集合差）见 §2.8。",
+ "all_match": true,
+ "values_at_build": {
+  "instrumentable": [
+   31305,
+   31305
+  ],
+  "macro": [
+   95,
+   95
+  ],
+  "unused": [
+   7,
+   7
+  ],
+  "ffprobe": [
+   95,
+   95
+  ],
+  "real_denom": [
+   31108,
+   31108
+  ],
+  "touched": [
+   15571,
+   15571
+  ],
+  "nt": [
+   15598,
+   15598
+  ],
+  "SIMD": [
+   1223,
+   1223
+  ],
+  "no_inbound_non_simd": [
+   6232,
+   6232
+  ],
+  "with_inbound_in_nt": [
+   8143,
+   8143
+  ],
+  "target_set": [
+   14375,
+   14375
+  ]
+ },
+ "excluded_macro": [
+  {
+   "func": "COMPOSE_DD97iH0",
+   "file": "libavcodec/dirac_dwt.h"
+  },
+  {
+   "func": "DV_PROFILE_IS_1080i50",
+   "file": "libavcodec/dv.h"
+  },
+  {
+   "func": "DV_PROFILE_IS_720p50",
+   "file": "libavcodec/dv.h"
+  },
+  {
+   "func": "IS_8x8DCT",
+   "file": "libavcodec/h264dec.h"
+  },
+  {
+   "func": "IS_INTRA16x16",
+   "file": "libavcodec/mpegutils.h"
+  },
+  {
+   "func": "IS_INTRA4x4",
+   "file": "libavcodec/mpegutils.h"
+  },
+  {
+   "func": "IVI_MBs_PER_TILE",
+   "file": "libavcodec/ivi.h"
+  },
+  {
+   "func": "MB_TYPE_16x16",
+   "file": "libavcodec/mpegutils.h"
+  },
+  {
+   "func": "MB_TYPE_INTRA16x16",
+   "file": "libavcodec/mpegutils.h"
+  },
+  {
+   "func": "MB_TYPE_INTRA4x4",
+   "file": "libavcodec/mpegutils.h"
+  },
+  {
+   "func": "bytestream2_copy_buffer",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_copy_bufferu",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_get_buffer",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_get_bufferu",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_get_bytes_left",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_get_bytes_left_p",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_get_eof",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_get_levarint",
+   "file": "libavcodec/snappy.c"
+  },
+  {
+   "func": "bytestream2_get_ne16",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_get_ne32",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_get_ne64",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_init",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_init_writer",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_peek_ne16",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_put_buffer",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_put_bufferu",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_put_ne16",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_put_ne24",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_seek",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_seek_p",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_set_buffer",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_set_bufferu",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_size",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_size_p",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_skip",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_skip_p",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_skipu",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_tell",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream2_tell_p",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream_get_buffer",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream_put_buffer",
+   "file": "libavcodec/bytestream.h"
+  },
+  {
+   "func": "bytestream_put_str",
+   "file": "libavcodec/hdrenc.c"
+  },
+  {
+   "func": "compile_uops_c",
+   "file": "libswscale/uops_backend.c"
+  },
+  {
+   "func": "compile_uops_x86",
+   "file": "libswscale/x86/ops.c"
+  },
+  {
+   "func": "expand_filename_template",
+   "file": "fftools/opt_common.c"
+  },
+  {
+   "func": "mss2_blit_wmv9_template",
+   "file": "libavcodec/mss2dsp.c"
+  },
+  {
+   "func": "quant_band_template",
+   "file": "libavcodec/opus/pvq.c"
+  },
+  {
+   "func": "quantize_and_encode_band_cost_template",
+   "file": "libavcodec/aaccoder.c"
+  },
+  {
+   "func": "rgb16_32ToUV_c_template",
+   "file": "libswscale/input.c"
+  },
+  {
+   "func": "rgb16_32ToUV_half_c_template",
+   "file": "libswscale/input.c"
+  },
+  {
+   "func": "rgb16_32ToY_c_template",
+   "file": "libswscale/input.c"
+  },
+  {
+   "func": "rgb48ToUV_c_template",
+   "file": "libswscale/input.c"
+  },
+  {
+   "func": "rgb48ToUV_half_c_template",
+   "file": "libswscale/input.c"
+  },
+  {
+   "func": "rgb48ToY_c_template",
+   "file": "libswscale/input.c"
+  },
+  {
+   "func": "rgb64ToUV_c_template",
+   "file": "libswscale/input.c"
+  },
+  {
+   "func": "rgb64ToUV_half_c_template",
+   "file": "libswscale/input.c"
+  },
+  {
+   "func": "rgb64ToY_c_template",
+   "file": "libswscale/input.c"
+  },
+  {
+   "func": "sprite_v_template",
+   "file": "libavcodec/vc1dsp.c"
+  },
+  {
+   "func": "subimage_with_fill_template",
+   "file": "libavcodec/proresenc_anatoliy.c"
+  },
+  {
+   "func": "yuv2422_1_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2422_2_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2422_X_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2ayuv_1_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2ayuv_2_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2ayuv_X_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2mono_1_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2mono_2_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2mono_X_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2msbplane1_10_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2msbplaneX_10_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2nv12cX_16_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2plane1_10_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2plane1_16_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2plane1_float_bswap_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2plane1_float_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2planeX_10_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2planeX_16_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2planeX_float_bswap_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2planeX_float_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2rgb_1_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2rgb_2_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2rgb_X_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2rgb_full_1_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2rgb_full_2_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2rgb_full_X_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2rgba64_1_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2rgba64_2_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2rgba64_X_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2rgba64_full_1_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2rgba64_full_2_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2rgba64_full_X_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2v30_X_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2ya16_1_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2ya16_2_c_template",
+   "file": "libswscale/output.c"
+  },
+  {
+   "func": "yuv2ya16_X_c_template",
+   "file": "libswscale/output.c"
+  }
+ ],
+ "excluded_unused": [
+  {
+   "func": "av_jni_get_java_vm",
+   "file": "libavcodec/jni.c"
+  },
+  {
+   "func": "av_jni_set_java_vm",
+   "file": "libavcodec/jni.c"
+  },
+  {
+   "func": "av_mediacodec_alloc_context",
+   "file": "libavcodec/mediacodec.c"
+  },
+  {
+   "func": "av_mediacodec_default_free",
+   "file": "libavcodec/mediacodec.c"
+  },
+  {
+   "func": "av_mediacodec_default_init",
+   "file": "libavcodec/mediacodec.c"
+  },
+  {
+   "func": "av_mediacodec_release_buffer",
+   "file": "libavcodec/mediacodec.c"
+  },
+  {
+   "func": "av_mediacodec_render_buffer_at_time",
+   "file": "libavcodec/mediacodec.c"
+  }
+ ],
+ "excluded_ffprobe": [
+  {
+   "func": "check_section_show_entries",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "clear_log",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "close_input_file",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "ffprobe_show_library_versions",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "ffprobe_show_pixel_formats",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "ffprobe_show_program_version",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "flush_buffers",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "get_decoder_by_name",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "get_decoder_for_stream",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "get_frame_side_data_type",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "get_packet_side_data_type",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "get_raw_string_type",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "get_stream_group_type",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "is_key_selected_callback",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "log_callback",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "log_read_interval",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "main",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "mark_section_show_entries",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "match_section",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "open_input_file",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "opt_codec",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "opt_format",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "opt_input_file",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "opt_input_file_i",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "opt_output_file_o",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "opt_pretty",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "opt_print_filename",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "opt_read_intervals",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "opt_sections",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "opt_show_chapters",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "opt_show_entries",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "opt_show_error",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "opt_show_format",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "opt_show_frames",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "opt_show_library_versions",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "opt_show_optional_fields",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "opt_show_packets",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "opt_show_pixel_formats",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "opt_show_program_version",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "opt_show_programs",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "opt_show_stream_groups",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "opt_show_streams",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "opt_show_versions",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "parse_read_interval",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "parse_read_intervals",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_alpha_mode",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_ambient_viewing_environment",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_chroma_location",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_color_range",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_color_space",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_color_trc",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_context_light_level",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_displaymatrix",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_dispositions",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_dovi_metadata",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_downmix_info",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_dynamic_hdr10_plus",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_dynamic_hdr_smpte2094_app5",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_dynamic_hdr_vivid",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_film_grain_params",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_frame_side_data",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_iamf_audio_element_params",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_iamf_mix_presentation_params",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_iamf_param_definition",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_iamf_submix_params",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_integers",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_mastering_display_metadata",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_pixel_format",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_pkt_side_data",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_primaries",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_private_data",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_section",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_stream_group_params",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "print_tile_grid_params",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "probe_file",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "process_frame",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "read_interval_packets",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "read_packets",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "set_decoders",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "show_chapters",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "show_error",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "show_format",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "show_frame",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "show_help_default",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "show_log",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "show_packet",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "show_program",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "show_programs",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "show_stream",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "show_stream_group",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "show_stream_groups",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "show_streams",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "show_subtitle",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "show_tags",
+   "file": "fftools/ffprobe.c"
+  },
+  {
+   "func": "show_usage",
+   "file": "fftools/ffprobe.c"
+  }
+ ],
+ "excluded_ffprobe_note": "ffprobe / ffplay 归属文件，共 95 条，按文件名规则可完全复现。"
+}

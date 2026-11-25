@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title data-t="docTitle">ACD 合流调用图 · 证据查看器</title>
+<style>
+  :root{
+    --bg:#090b0e; --stage:#0a0d11; --panel:#0f1318; --panel2:#141a21; --panel3:#182029;
+    --line:#1c232b; --line2:#27313c; --txt:#e2e8ee; --dim:#8c98a5; --dimmer:#5b6773;
+    --hi:#eef3f8;
+    --static:#5b86d6; --runtime:#3fbb8e; --asm:#9d7ce8; --reg:#d8a15c; --multi:#e4ebf2;
+    --g-has:#4b5866; --g-asm:#9d7ce8; --g-dyn:#d8a15c; --g-dead:#d4655f; --g-nomap:#6b7784;
+    --mono:ui-monospace,"Cascadia Mono","JetBrains Mono",Consolas,"Courier New",monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--txt);
+    font:12.5px/1.5 ui-sans-serif,system-ui,"Segoe UI","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased}
+  #app{height:100%;display:grid;grid-template-rows:56px minmax(0,1fr) 34px}
+  .mono{font-family:var(--mono)}
+
+  /* ---------- 顶栏 ---------- */
+  #bar{display:flex;align-items:center;gap:16px;padding:0 14px 0 16px;
+    border-bottom:1px solid var(--line);background:var(--panel)}
+  .brand{display:flex;align-items:center;gap:10px;min-width:0}
+  .mark{width:20px;height:20px;flex:none;opacity:.92}
+  .brand h1{margin:0;font-size:13px;font-weight:600;letter-spacing:.2px;white-space:nowrap}
+  .brand h1 small{font-weight:400;color:var(--dimmer);font-size:11px;margin-left:8px;letter-spacing:0}
+  .rev{font:10px/1 var(--mono);color:var(--dim);border:1px solid var(--line2);border-radius:2px;
+    padding:3px 6px;white-space:nowrap;letter-spacing:.4px}
+  .searchbox{position:relative;margin-left:auto;width:262px;flex:none}
+  .searchwrap{display:flex;align-items:center;gap:0;
+    border:1px solid var(--line2);border-radius:3px;background:#0a0e12;height:28px;width:100%}
+  .searchwrap svg{flex:none;margin:0 7px;opacity:.5}
+  #search{flex:1;min-width:0;border:0;background:transparent;color:var(--txt);outline:none;
+    font:12px var(--mono)}
+  #search::placeholder{color:var(--dimmer);font-family:ui-sans-serif,system-ui,sans-serif}
+  #scope{font:10px/1 var(--mono);color:var(--dimmer);padding:0 7px;border-left:1px solid var(--line);
+    white-space:nowrap}
+  #hits{position:absolute;top:33px;left:0;width:100%;max-height:340px;overflow:auto;
+    background:var(--panel2);border:1px solid var(--line2);border-radius:3px;z-index:40;display:none;
+    box-shadow:0 12px 32px rgba(0,0,0,.55)}
+  #hits .hit{padding:5px 9px;cursor:pointer;border-bottom:1px solid var(--line);display:flex;
+    gap:8px;align-items:baseline}
+  #hits .hit:hover{background:var(--panel3)}
+  #hits .hit .nm{font:11.5px var(--mono);color:var(--hi);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #hits .hit .fp{font:10px var(--mono);color:var(--dimmer);margin-left:auto;white-space:nowrap}
+  #hits .none{padding:9px;color:var(--dimmer);font-size:11.5px;line-height:1.6}
+  .bar-btn{display:flex;align-items:center;gap:5px;height:28px;padding:0 10px;border:1px solid var(--line2);
+    border-radius:3px;background:transparent;color:var(--dim);cursor:pointer;font-size:11.5px;white-space:nowrap}
+  .bar-btn:hover{color:var(--txt);border-color:#3a4753;background:#121820}
+  .bar-btn svg{opacity:.7}
+
+  /* ---------- 主体三栏 ---------- */
+  main{display:grid;grid-template-columns:296px minmax(0,1fr) 336px;min-height:0}
+
+  /* 左栏 */
+  #rail{border-right:1px solid var(--line);background:var(--panel);overflow-y:auto;
+    display:flex;flex-direction:column;min-height:0}
+  #rail::-webkit-scrollbar{width:8px}
+  #rail::-webkit-scrollbar-thumb{background:#202932;border-radius:4px}
+  .sec{padding:13px 14px 15px;border-bottom:1px solid var(--line)}
+  .sec-h{display:flex;align-items:baseline;gap:7px;margin-bottom:9px}
+  .sec-h h3{margin:0;font-size:11px;font-weight:600;letter-spacing:1.2px;color:var(--dim);text-transform:uppercase}
+  .sec-h .tag{font-size:9.5px;color:var(--dimmer);letter-spacing:.3px;margin-left:auto}
+
+  .vcard{width:100%;text-align:left;padding:9px 10px 10px;margin-bottom:7px;cursor:pointer;
+    border:1px solid var(--line);border-left:2px solid transparent;border-radius:3px;
+    background:#0d1217;color:var(--txt);display:block;transition:border-color .12s,background .12s}
+  .vcard:hover{background:#111820;border-color:var(--line2)}
+  .vcard.on{background:#111a22;border-color:var(--line2);border-left-color:var(--hi)}
+  .vc-top{display:flex;align-items:baseline;gap:8px}
+  .vc-title{font-size:12.5px;font-weight:600;letter-spacing:.2px}
+  .vc-cnt{margin-left:auto;font:10px var(--mono);color:var(--dimmer);white-space:nowrap}
+  .vc-note{margin:4px 0 6px;font-size:11px;line-height:1.55;color:var(--dim)}
+  .vc-fn{font:10.5px var(--mono);color:#7f8c99;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .vc-bar{display:flex;height:3px;margin:7px 0 5px;background:#161d25;border-radius:1px;overflow:hidden}
+  .vc-bar i{display:block;height:100%}
+  .vc-nums{display:flex;gap:9px;font:9.5px var(--mono);color:var(--dimmer)}
+  .vc-nums .b{color:#a9b6c3}
+
+  .seg{display:flex;border:1px solid var(--line);border-radius:3px;overflow:hidden}
+  .seg button{flex:1;border:0;background:#0d1217;color:var(--dim);font-size:11px;padding:6px 2px;
+    cursor:pointer;display:flex;flex-direction:column;gap:2px;align-items:center;border-right:1px solid var(--line)}
+  .seg button:last-child{border-right:0}
+  .seg button:hover{background:#121a22;color:var(--txt)}
+  .seg button.on{background:#1a2733;color:var(--hi)}
+  .seg button b{font:10px var(--mono);font-weight:500;color:var(--dimmer)}
+  .seg button.on b{color:#9fb0bf}
+
+  .lg{display:flex;align-items:center;gap:7px;padding:4px 2px;cursor:pointer;user-select:none;
+    font-size:11px;color:var(--dim);border-radius:2px}
+  .lg:hover{color:var(--txt);background:#121a22}
+  .lg.off{opacity:.32}
+  .sw{width:8px;height:8px;border-radius:1px;flex:none}
+  .lg .cnt{margin-left:auto;font:10px var(--mono);color:var(--dimmer)}
+  .lg-line{width:11px;height:2px;flex:none;border-radius:1px}
+  .lg-foot{margin-top:7px;font-size:10px;line-height:1.55;color:var(--dimmer)}
+
+  #railfoot{margin-top:auto;padding:8px 14px;border-top:1px solid var(--line);
+    font:10px/1.7 var(--mono);color:var(--dimmer)}
+  #railfoot kbd{border:1px solid var(--line2);border-radius:2px;padding:0 4px;margin-right:3px;color:#8b98a5}
+
+  /* 画布 */
+  #stage{position:relative;background:var(--stage);overflow:hidden;min-width:0}
+  #cv{display:block;cursor:grab}
+  #cv:active{cursor:grabbing}
+  .ov{position:absolute;pointer-events:none;z-index:5}
+  #caption{top:11px;left:14px;max-width:62%}
+  #caption b{font-size:12.5px;font-weight:600;letter-spacing:.2px}
+  #caption span{font-size:11.5px;color:var(--dim);margin-left:8px}
+  .slice{font:9.5px/1 var(--mono);color:var(--dimmer);border:1px solid var(--line2);border-radius:2px;
+    padding:3px 6px;white-space:nowrap;letter-spacing:.3px}
+  .slice b{color:#a9b6c3;font-weight:500}
+  #slicehint{top:36px;left:14px;font:10px/1.5 var(--mono);color:var(--dimmer);max-width:62%}
+  #slicehint i{color:#8b98a5;font-style:normal}
+  #readout{bottom:11px;left:14px;font:10.5px/1.5 var(--mono);color:var(--dimmer);
+    background:rgba(9,12,16,.62);border:1px solid rgba(255,255,255,.05);border-radius:2px;padding:5px 8px}
+  #readout .v{color:#b9c6d3}
+  #readout .hl{color:var(--runtime)}
+  #zoom{bottom:11px;right:12px;display:flex;align-items:center;gap:0;pointer-events:auto;
+    border:1px solid var(--line2);border-radius:3px;background:rgba(9,12,16,.72);height:26px}
+  #zoom button{border:0;background:transparent;color:var(--dim);cursor:pointer;font-size:12px;
+    padding:0 9px;height:100%}
+  #zoom button:hover{color:var(--txt);background:#161e26}
+  #zval{font:10px var(--mono);color:var(--dimmer);min-width:38px;text-align:center;
+    border-left:1px solid var(--line);border-right:1px solid var(--line);height:100%;
+    display:flex;align-items:center;justify-content:center}
+  #toast{position:absolute;left:50%;transform:translateX(-50%);bottom:48px;background:#1a232c;
+    border:1px solid var(--line2);color:var(--hi);font-size:11.5px;padding:6px 12px;border-radius:3px;
+    opacity:0;transition:opacity .18s;pointer-events:none;z-index:30}
+  #toast.on{opacity:1}
+
+  /* 右栏 */
+  #inspector{border-left:1px solid var(--line);background:var(--panel);overflow-y:auto;min-height:0}
+  #inspector::-webkit-scrollbar{width:8px}
+  #inspector::-webkit-scrollbar-thumb{background:#202932;border-radius:4px}
+  .insp-pad{padding:14px}
+  .empty h4{margin:0 0 2px;font-size:12px;font-weight:600;letter-spacing:.4px}
+  .empty .sub{font-size:11px;color:var(--dimmer);margin-bottom:12px}
+  .ledger{width:100%;border-collapse:collapse;font:11px var(--mono);margin-bottom:4px}
+  .ledger td{padding:3.5px 0;border-bottom:1px solid var(--line);color:var(--dim)}
+  .ledger td:first-child{color:var(--dimmer)}
+  .ledger td:last-child{text-align:right;color:#c2cfdb}
+  .lbar{display:flex;height:5px;margin:10px 0 6px;background:#161d25}
+  .lbar i{display:block;height:100%}
+  .lkeys{display:flex;flex-wrap:wrap;gap:4px 10px;font:9.5px var(--mono);color:var(--dimmer)}
+  .lkeys span{display:flex;align-items:center;gap:4px}
+  .hint{margin:14px 0 0;font-size:11px;line-height:1.65;color:var(--dimmer)}
+  .hint em{color:#9fadba;font-style:normal}
+  .hint .kbd{border:1px solid var(--line2);border-radius:2px;padding:0 3px;font:9.5px var(--mono);color:#8b98a5}
+
+  .nhead{cursor:default}
+  .nhead .gn{font:13px/1.35 var(--mono);color:var(--hi);word-break:break-all;margin:0 0 4px}
+  .nhead .gf{font:10.5px var(--mono);color:var(--dim);word-break:break-all}
+  .badges{display:flex;flex-wrap:wrap;gap:5px;margin:10px 0 0}
+  .bdg{font:9.5px/1 var(--mono);padding:3px 5px;border-radius:2px;border:1px solid var(--line2);color:var(--dim)}
+  .acts{display:flex;gap:6px;margin-top:11px}
+  .acts button{flex:1;border:1px solid var(--line2);background:#0d1217;color:var(--dim);border-radius:3px;
+    font-size:11px;padding:5px 0;cursor:pointer}
+  .acts button:hover{color:var(--txt);background:#141c24}
+  .gapdef{margin-top:11px;padding:8px 9px;background:#0c1014;border:1px solid var(--line);border-radius:3px;
+    font-size:10.5px;line-height:1.6;color:var(--dim)}
+  .gapdef b{color:#b7c4d0;font-weight:500}
+  .mxhint{margin-top:9px;font-size:9.5px;line-height:1.6;color:var(--dimmer)}
+  .mxhint s{text-decoration:none}
+
+  .esec{display:flex;align-items:baseline;gap:6px;margin:15px 0 5px;padding-bottom:4px;
+    border-bottom:1px solid var(--line);font-size:10.5px;letter-spacing:.6px;color:var(--dim)}
+  .esec b{font:10.5px var(--mono);color:#c2cfdb}
+  .esec .r{margin-left:auto;font:9.5px var(--mono);color:var(--dimmer)}
+  .erow{padding:5px 6px 5px 5px;border-bottom:1px solid #141b22;cursor:pointer;border-radius:2px;margin:0 -5px}
+  .erow:hover{background:#121a22}
+  .er1{display:flex;align-items:center;gap:6px}
+  .er1 .nm{font:11px var(--mono);color:#cfdae5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .er1 .mx{margin-left:auto;display:grid;grid-template-columns:repeat(4,8px);gap:2px;flex:none}
+  .er1 .mx i{width:8px;height:8px;border-radius:1px;background:#161d25;border:1px solid #222c36}
+  .er1 .mx i.on{border-color:transparent}
+  .er2{margin-top:2px;font:9.5px var(--mono);color:var(--dimmer);white-space:nowrap;overflow:hidden;
+    text-overflow:ellipsis}
+  .er2 .tr{color:#5f7d6a}
+  .more{font:10px var(--mono);color:var(--dimmer);padding:6px 0 0}
+
+  /* 底栏 */
+  #manifest{display:flex;align-items:center;gap:0;border-top:1px solid var(--line);background:var(--panel);
+    font:10px/1 var(--mono);color:var(--dimmer);padding:0 14px;overflow:hidden}
+  .mf{display:flex;align-items:center;gap:6px;padding-right:12px;margin-right:12px;
+    border-right:1px solid var(--line);height:100%;white-space:nowrap}
+  .mf .k{color:#4e5a66}
+  .mf .v{color:#a4b2c0}
+  .mf button{border:0;background:transparent;color:#4e5a66;cursor:pointer;font:9.5px var(--mono);padding:2px}
+  .mf button:hover{color:var(--txt)}
+  .mf .trunc{max-width:290px;overflow:hidden;text-overflow:ellipsis;color:#8b98a5}
+  #mf-right{margin-left:auto;color:#4e5a66;white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header id="bar">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 20 20"><g stroke="#eef3f8" stroke-width="1.1" fill="none" stroke-linecap="round"><path d="M2 4.5 9 10M2 10h7M2 15.5 9 10"/><path d="M9 10h9"/></g><circle cx="9" cy="10" r="1.6" fill="#eef3f8"/></svg>
+      <h1><span data-t="brand">ACD 合流调用图</span><small data-t="brandSub">证据查看器</small></h1>
+      <span class="rev">RESEARCH PREVIEW</span>
+      <span class="slice" id="slicebadge"></span>
+    </div>
+    <div class="searchbox">
+      <label class="searchwrap">
+        <svg width="11" height="11" viewBox="0 0 16 16"><circle cx="6.6" cy="6.6" r="4.6" stroke="#8c98a5" fill="none"/><path d="M10.2 10.2 14 14" stroke="#8c98a5"/></svg>
+        <input id="search" data-tp="searchPh" placeholder="搜函数名  /" autocomplete="off" spellcheck="false">
+        <span id="scope"></span>
+      </label>
+      <div id="hits"></div>
+    </div>
+    <button class="bar-btn" id="btn-lang" data-tt="langTitle" title="切换界面语言 / switch language"><span id="langlab">EN</span></button>
+    <button class="bar-btn" id="btn-link" data-tt="linkTitle" title="复制当前视图与选中节点的链接">
+      <svg width="11" height="11" viewBox="0 0 16 16"><path d="M6.5 9.5 9.5 6.5M5 11l-1 1a3 3 0 0 1 0-4l2-2a3 3 0 0 1 4 0M11 5l1-1a3 3 0 0 1 0 4l-2 2a3 3 0 0 1-4 0" stroke="#8c98a5" fill="none"/></svg>
+      <span data-t="linkText">复制链接</span></button>
+    <button class="bar-btn" id="btn-png" data-tt="pngTitle" title="导出当前画布（2× 像素，含图锚水印）">
+      <svg width="11" height="11" viewBox="0 0 16 16"><path d="M8 2v8m0 0-2.6-2.6M8 10l2.6-2.6M2.5 12.5h11" stroke="#8c98a5" fill="none"/></svg>
+      <span data-t="pngText">导出 PNG</span></button>
+  </header>
+
+  <main>
+    <aside id="rail">
+      <div class="sec">
+        <div class="sec-h"><h3 data-t="secViews">视图</h3><span class="tag" id="vtag"></span></div>
+        <div id="views"></div>
+        <div class="lg-foot" data-t="secViewsFoot">竖向排列按“从主路径到盲区”，先看 ①。</div>
+      </div>
+      <div class="sec">
+        <div class="sec-h"><h3 data-t="secEdges">边</h3><span class="tag" data-t="secEdgesTag">按来源层筛选</span></div>
+        <div class="seg" id="emodes"></div>
+      </div>
+      <div class="sec">
+        <div class="sec-h"><h3 data-t="secLayers">图层</h3><span class="tag" data-t="secLayersTag">边的属性</span></div>
+        <div id="lgLayer"></div>
+      </div>
+      <div class="sec" style="border-bottom:0">
+        <div class="sec-h"><h3 data-t="secGap">归因</h3><span class="tag" data-t="secGapTag">节点的属性</span></div>
+        <div id="lgGap"></div>
+        <div class="lg-foot" id="gapfoot"></div>
+      </div>
+      <div id="railfoot">
+        <div><kbd data-t="kbdWheel">滚轮</kbd><span data-t="kbdZoom">缩放</span>　<kbd data-t="kbdDrag">拖拽</kbd><span data-t="kbdPan">平移</span></div>
+        <div><kbd>F</kbd><span data-t="kbdFit">适应</span>　<kbd>/</kbd><span data-t="kbdSearch">搜索</span>　<kbd>Esc</kbd><span data-t="kbdEsc">取消选中</span></div>
+      </div>
+    </aside>
+
+    <div id="stage">
+      <canvas id="cv"></canvas>
+      <div class="ov" id="caption"><b></b><span></span></div>
+      <div class="ov" id="slicehint"></div>
+      <div class="ov" id="readout"></div>
+      <div id="zoom">
+        <button data-z="-1" data-tt="zoomOut" title="缩小">−</button><span id="zval">100%</span>
+        <button data-z="1" data-tt="zoomIn" title="放大">+</button>
+        <button data-z="f" data-tt="zoomFit" title="适应屏幕"><span data-t="fitText">适应</span></button>
+      </div>
+      <div id="toast"></div>
+    </div>
+
+    <aside id="inspector"><div class="insp-pad" id="insp"></div></aside>
+  </main>
+
+  <footer id="manifest">
+    <div class="mf"><span class="k" data-t="mfMd5">图锚 md5</span><span class="v" id="m-md5"></span><button data-copy="md5" data-tt="copyMd5" title="复制 md5" data-t="copy">复制</button></div>
+    <div class="mf"><span class="k">commit</span><span class="v" id="m-commit"></span><button data-copy="commit" data-tt="copyCommit" title="复制 commit" data-t="copy">复制</button></div>
+    <div class="mf"><span class="k">configure</span><span class="trunc" id="m-conf"></span><button data-copy="conf" data-tt="copyConf" title="复制 configure" data-t="copy">复制</button></div>
+    <div class="mf" style="border:0"><span class="k" data-t="mfGen">生成</span><span class="v" id="m-gen"></span></div>
+    <div id="mf-right"></div>
+  </footer>
+</div>
+
+<script>const RAW = /*__DATA__*/;</script>
+<script>
+(function(){
+  "use strict";
+
+  /* ========== 0. 常量与口径 ========== */
+  // 层：颜色只代表“哪一层看到的”，不与节点归因抢色相
+  const LC = {static:'#5b86d6', runtime:'#3fbb8e', asm:'#9d7ce8', 'static-reg':'#d8a15c', multi:'#e4ebf2'};
+  const LAYERS = ['static','runtime','asm','static-reg'];
+  // 节点归因：HAS_INBOUND 用中性色，把色相留给边
+  const GC = {HAS_INBOUND:'#4b5866', UNKNOWN_ASM:'#9d7ce8', UNKNOWN_DYNAMIC:'#d8a15c',
+              DEAD_SUSPECT:'#d4655f', NO_FILE_MAP:'#6b7784', UNCOVERED:'#5b6773'};
+  const MONO = 'ui-monospace,"Cascadia Mono",Consolas,monospace';
+
+  /* ========== 0.1 双语表（zh / en 键集必须完全一致，smoke_test 会查） ========== */
+  const I18N = {
+    zh: {
+      docTitle:'ACD 合流调用图 · 证据查看器', brand:'ACD 合流调用图', brandSub:'证据查看器',
+      searchPh:'搜函数名  /', linkText:'复制链接', linkTitle:'复制当前视图与选中节点的链接',
+      pngText:'导出 PNG', pngTitle:'导出当前画布（2× 像素，含图锚水印）',
+      langTitle:'切换界面语言 / switch language',
+      secViews:'视图', secViewsFoot:'竖向排列按“从主路径到盲区”，先看 ①。',
+      secEdges:'边', secEdgesTag:'按来源层筛选', secLayers:'图层', secLayersTag:'边的属性',
+      secGap:'归因', secGapTag:'节点的属性',
+      kbdWheel:'滚轮', kbdZoom:'缩放', kbdDrag:'拖拽', kbdPan:'平移',
+      kbdFit:'适应', kbdSearch:'搜索', kbdEsc:'取消选中',
+      zoomOut:'缩小', zoomIn:'放大', zoomFit:'适应屏幕', fitText:'适应',
+      mfMd5:'图锚 md5', mfGen:'生成', copy:'复制',
+      copyMd5:'复制 md5', copyCommit:'复制 commit', copyConf:'复制 configure',
+      ln_static:'静态 tree-sitter', ln_runtime:'运行时插桩', ln_asm:'汇编 Capstone',
+      ln_staticreg:'注册表', ln_multi:'≥2 源交叉',
+      ls_static:'静态', ls_runtime:'运行时', ls_asm:'汇编', ls_staticreg:'注册表', ls_multi:'交叉',
+      gn_HAS_INBOUND:'有入边', gn_UNKNOWN_ASM:'汇编未定', gn_UNKNOWN_DYNAMIC:'运行时未达',
+      gn_DEAD_SUSPECT:'疑似死码', gn_NO_FILE_MAP:'无源码映射', gn_UNCOVERED:'未解释',
+      gd_HAS_INBOUND:'有入边：静态 / 运行时 / 汇编 / 注册表任一层看到它被调用。',
+      gd_UNKNOWN_ASM:'无入边 + 汇编路径（.asm / .S）或裸名命中汇编符号表。',
+      gd_UNKNOWN_DYNAMIC:'无入边 + 有 file_map + 非汇编/SIMD + 非 DSP 命名 + 在可插桩集内：函数指针表成员候选。',
+      gd_DEAD_SUSPECT:'无入边 + 有 file_map + 非汇编/SIMD + DSP 命名特征。疑似，未证实。',
+      gd_NO_FILE_MAP:'无入边 + file_map 查不到（full_id 与裸名回退均 miss）。',
+      gd_UNCOVERED:'无入边 + 有 file_map + 非汇编/SIMD + 非 DSP + 不在可插桩集。当前图为 0，故图例只列 5 类。',
+      nEdges:'{n} 边', vtag:'{n} 个切片', single:'单源', cross:'交叉', nodes:'节点', edgeUnit:'边',
+      modeAll:'全部', modeSingle:'单源', modeCross:'交叉',
+      roAll:'{m} 边 · 单源 {s} · 交叉 {c}',
+      roRuntime:'运行时独占 {n}', roAsm:'汇编独占 {n}',
+      roSingle:'只留单源：{n} 条，其中运行时 {r} · 静态 {st} · 汇编 {a} · 注册表 {g}',
+      roCross:'只留 ≥2 源交叉：{n} 条（两层以上各自独立看到，才计入）',
+      scope:'切片 {n}',
+      sliceBadge:'SLICE {i}/{k} · {n} / {tn} 节点（{p}%）',
+      sliceHint:'本视图 {m} / {tm} 边（{pm}%）· 非全图；全量查询用 scripts/query.py',
+      ledgerEdge:'边', ledgerSingle:'单源独占', ledgerCross:'≥2 源交叉', ledgerNodes:'节点',
+      ledgerDead:'疑似死码', ledgerAsm:'汇编未定', nodesUnit:'{n} 个节点', colon:'：',
+      hiDead:'本视图主动画出 <b style="color:#d4655f">{n}</b> 个疑似死码节点（DEAD_SUSPECT，未证实）——把没做到的部分也放进来。',
+      hiRuntime:'本视图 <b style="color:#3fbb8e">{n}</b> 条边只有运行时插桩看得到——纯静态解析拿不到。',
+      hiAsm:'本视图 <b style="color:#9d7ce8">{n}</b> 条边只有汇编层看得到——C 层解析看不到。',
+      hiCross:'本视图有 <b>{n}</b> 条边被两层以上各自独立看到。',
+      emptyTitle:'本视图的合流账', emptySub:'{title} · 焦点 {focus}',
+      sliceLine:'切片 {n} / {tn} 节点（{pn}%）· {m} / {tm} 边（{pm}%）—— 非全图',
+      hintClick:'在画布上点任一节点 → 这里换成它的逐边证据：<em>每条边被哪几层各自看到</em>、调用点行号、trace 次数。',
+      hintModes:'点顶部的 <span class="kbd">单源</span> / <span class="kbd">交叉</span> 切换，看“合流才有的边”。',
+      gapFootNote:'六分类里的 UNCOVERED 当前图为 0，故只列 5 类——不是少了一类。',
+      focusCard:'FOCUS · L0 · 出 {o} / 入 {i}', tipLine:'L{l} · 出 {o} / 入 {i} · {g}',
+      badgeDeg:'出 {o} / 入 {i}',
+      mxHintPre:'右列四格：', mxHintPost:'，亮 = 该层独立看到这条边。',
+      mxS:'静', mxR:'运', mxA:'汇', mxG:'注',
+      mxTitle:'逐层出处：静态 / 运行时 / 汇编 / 注册表',
+      mxTitleNo:'源数（该版本数据未含逐层出处）', nSrc:'{n} 源',
+      actCopy:'复制证据', actLink:'复制链接',
+      esecOut:'调用 {n}', esecIn:'被调用 {n}', esecSort:'按源数排序', esecCaller:'← 调用方',
+      moreRows:'仅显示前 {cap} 条，共 {n} 条', noEdges:'本切片内该节点没有边。',
+      evAttr:'归因 {g} · L{l} · 出 {o} / 入 {i}', evOutHead:'调用（前 8 条）:', evInHead:'被调用（前 8 条）:',
+      evFooter:'图锚 {md5} · ffmpeg {commit} · 视图 {view}', traceSuffix:'· trace {n}',
+      searchNone:'本切片 {n} 个节点内无匹配。',
+      searchScope:'查看器只载入 {k} 个切片，全图 {n} 个调用方节点未载入——不是查不到，是没装进来。',
+      mfRight:'载入 {k} 切片 · {n} 节点 · {m} 边（非全图：全图 {tn} 节点 / {tm} 边，占 {pn}% / {pm}%）',
+      toastCopy:'已复制', toastCopyFail:'复制失败，请手动选择', toastPngFail:'导出失败',
+      toastPng:'已导出 PNG（含图锚水印）',
+      exportFoot:'ACD 多源合流调用图 · md5 {md5} · ffmpeg {commit} · 生成 {gen}',
+      exportEdges:'{m} 边 / {n} 节点（切片）',
+      exportSlice:'SLICE {i}/{k} · 非全图（全图 {tn} 节点 / {tm} 边）'
+    },
+    en: {
+      docTitle:'ACD Merged Call Graph · Evidence Viewer', brand:'ACD Merged Call Graph', brandSub:'evidence viewer',
+      searchPh:'function name  /', linkText:'Copy link', linkTitle:'Copy a link to this view and the selected node',
+      pngText:'Export PNG', pngTitle:'Export current canvas (2× pixels, with graph-anchor watermark)',
+      langTitle:'切换界面语言 / switch language',
+      secViews:'VIEWS', secViewsFoot:'Ordered from the main path to the blind spot — read ① first.',
+      secEdges:'EDGES', secEdgesTag:'filter by source layer', secLayers:'LAYERS', secLayersTag:'edge property',
+      secGap:'ATTRIBUTION', secGapTag:'node property',
+      kbdWheel:'wheel', kbdZoom:'zoom', kbdDrag:'drag', kbdPan:'pan',
+      kbdFit:'fit', kbdSearch:'search', kbdEsc:'deselect',
+      zoomOut:'Zoom out', zoomIn:'Zoom in', zoomFit:'Fit to screen', fitText:'Fit',
+      mfMd5:'graph md5', mfGen:'generated', copy:'copy',
+      copyMd5:'copy md5', copyCommit:'copy commit', copyConf:'copy configure',
+      ln_static:'static (tree-sitter)', ln_runtime:'runtime instrumentation', ln_asm:'assembly (Capstone)',
+      ln_staticreg:'registry', ln_multi:'≥2 sources',
+      ls_static:'static', ls_runtime:'runtime', ls_asm:'asm', ls_staticreg:'registry', ls_multi:'cross',
+      gn_HAS_INBOUND:'has inbound', gn_UNKNOWN_ASM:'asm unresolved', gn_UNKNOWN_DYNAMIC:'runtime miss',
+      gn_DEAD_SUSPECT:'suspect dead', gn_NO_FILE_MAP:'no file map', gn_UNCOVERED:'unexplained',
+      gd_HAS_INBOUND:'Has inbound: any of static / runtime / assembly / registry saw it being called.',
+      gd_UNKNOWN_ASM:'No inbound + assembly path (.asm / .S) or a bare name hitting the assembly symbol table.',
+      gd_UNKNOWN_DYNAMIC:'No inbound + has file_map + not assembly/SIMD + not DSP-named + inside the instrumentable set: function-pointer-table member candidate.',
+      gd_DEAD_SUSPECT:'No inbound + has file_map + not assembly/SIMD + DSP naming pattern. Suspected, unconfirmed.',
+      gd_NO_FILE_MAP:'No inbound + file_map lookup failed (both full_id and bare-name fallback missed).',
+      gd_UNCOVERED:'No inbound + has file_map + not assembly/SIMD + not DSP + outside the instrumentable set. Zero in this graph, so the legend lists only 5 classes.',
+      nEdges:'{n} edges', vtag:'{n} slices', single:'single', cross:'cross', nodes:'nodes', edgeUnit:'edges',
+      modeAll:'all', modeSingle:'single', modeCross:'cross',
+      roAll:'{m} edges · single {s} · cross {c}',
+      roRuntime:'runtime-only {n}', roAsm:'asm-only {n}',
+      roSingle:'single-source only: {n} edges — runtime {r} · static {st} · asm {a} · registry {g}',
+      roCross:'≥2-source only: {n} edges (counted only when two or more layers each saw it)',
+      scope:'slice {n}',
+      sliceBadge:'SLICE {i}/{k} · {n} / {tn} nodes ({p}%)',
+      sliceHint:'{m} / {tm} edges in this view ({pm}%) · not the full graph; use scripts/query.py to query all of it',
+      ledgerEdge:'edges', ledgerSingle:'single-source only', ledgerCross:'≥2 sources', ledgerNodes:'nodes',
+      ledgerDead:'suspect dead', ledgerAsm:'asm unresolved', nodesUnit:'{n} nodes', colon:': ',
+      hiDead:'This view deliberately draws <b style="color:#d4655f">{n}</b> suspected-dead nodes (DEAD_SUSPECT, unconfirmed) — the gap included on purpose.',
+      hiRuntime:'<b style="color:#3fbb8e">{n}</b> edges here are visible only to runtime instrumentation — pure static parsing cannot reach them.',
+      hiAsm:'<b style="color:#9d7ce8">{n}</b> edges here are visible only to the assembly layer — C-level parsing cannot see them.',
+      hiCross:'<b>{n}</b> edges here are each seen independently by two or more layers.',
+      emptyTitle:'Ledger for this view', emptySub:'{title} · focus {focus}',
+      sliceLine:'Slice {n} / {tn} nodes ({pn}%) · {m} / {tm} edges ({pm}%) — not the full graph',
+      hintClick:'Click any node on the canvas → this panel becomes its per-edge evidence: <em>which layers saw each edge</em>, the call-site line, the trace count.',
+      hintModes:'Use the <span class="kbd">single</span> / <span class="kbd">cross</span> switch above to see the edges only merging can produce.',
+      gapFootNote:'UNCOVERED of the six classes is 0 in this graph, so only 5 are listed — no class is missing.',
+      focusCard:'FOCUS · L0 · out {o} / in {i}', tipLine:'L{l} · out {o} / in {i} · {g}',
+      badgeDeg:'out {o} / in {i}',
+      mxHintPre:'Four cells: ', mxHintPost:' — lit means that layer saw this edge on its own.',
+      mxS:'S', mxR:'R', mxA:'A', mxG:'G',
+      mxTitle:'per-layer evidence: static / runtime / asm / registry',
+      mxTitleNo:'source count (this data carries no per-layer evidence)', nSrc:'{n} src',
+      actCopy:'Copy evidence', actLink:'Copy link',
+      esecOut:'calls {n}', esecIn:'called by {n}', esecSort:'by source count', esecCaller:'← caller',
+      moreRows:'showing first {cap} of {n}', noEdges:'No edges for this node in this slice.',
+      evAttr:'attribution {g} · L{l} · out {o} / in {i}', evOutHead:'calls (first 8):', evInHead:'called by (first 8):',
+      evFooter:'graph md5 {md5} · ffmpeg {commit} · view {view}', traceSuffix:'· trace {n}',
+      searchNone:'No match among the {n} nodes of this slice.',
+      searchScope:'Only {k} slices are loaded; the other {n} caller nodes of the full graph are not here — not missing, just not loaded.',
+      mfRight:'loaded {k} slices · {n} nodes · {m} edges (not the full graph: {tn} nodes / {tm} edges, i.e. {pn}% / {pm}%)',
+      toastCopy:'Copied', toastCopyFail:'Copy failed — select the text manually', toastPngFail:'Export failed',
+      toastPng:'PNG exported (with graph-anchor watermark)',
+      exportFoot:'ACD multi-source merged call graph · md5 {md5} · ffmpeg {commit} · generated {gen}',
+      exportEdges:'{m} edges / {n} nodes (slice)',
+      exportSlice:'SLICE {i}/{k} · not the full graph ({tn} nodes / {tm} edges)'
+    }
+  };
+  let LANG='zh', LN={}, LS={}, GN={}, GD={};
+  function TR(k,v){
+    const d=I18N[LANG]||I18N.zh;
+    let s=(d[k]!=null?d[k]:(I18N.zh[k]!=null?I18N.zh[k]:k));
+    if(v) for(const p in v) s=s.split('{'+p+'}').join(String(v[p]));
+    return s;
+  }
+  function buildLex(){
+    LN={static:TR('ln_static'),runtime:TR('ln_runtime'),asm:TR('ln_asm'),'static-reg':TR('ln_staticreg'),multi:TR('ln_multi')};
+    LS={static:TR('ls_static'),runtime:TR('ls_runtime'),asm:TR('ls_asm'),'static-reg':TR('ls_staticreg'),multi:TR('ls_multi')};
+    GN={HAS_INBOUND:TR('gn_HAS_INBOUND'),UNKNOWN_ASM:TR('gn_UNKNOWN_ASM'),UNKNOWN_DYNAMIC:TR('gn_UNKNOWN_DYNAMIC'),
+        DEAD_SUSPECT:TR('gn_DEAD_SUSPECT'),NO_FILE_MAP:TR('gn_NO_FILE_MAP'),UNCOVERED:TR('gn_UNCOVERED')};
+    GD={HAS_INBOUND:TR('gd_HAS_INBOUND'),UNKNOWN_ASM:TR('gd_UNKNOWN_ASM'),UNKNOWN_DYNAMIC:TR('gd_UNKNOWN_DYNAMIC'),
+        DEAD_SUSPECT:TR('gd_DEAD_SUSPECT'),NO_FILE_MAP:TR('gd_NO_FILE_MAP'),UNCOVERED:TR('gd_UNCOVERED')};
+  }
+  function applyI18n(){
+    document.querySelectorAll('[data-t]').forEach(el=>{ el.textContent=TR(el.dataset.t); });
+    document.querySelectorAll('[data-tt]').forEach(el=>{ el.title=TR(el.dataset.tt); });
+    document.querySelectorAll('[data-tp]').forEach(el=>{ el.placeholder=TR(el.dataset.tp); });
+    document.title=TR('docTitle');
+    document.documentElement.lang = LANG==='en'?'en':'zh-CN';
+    const lab=$('#langlab'); if(lab) lab.textContent = LANG==='en'?'中文':'EN';
+  }
+
+  /* ========== 1. 工具 ========== */
+  const $ = s=>document.querySelector(s);
+  const fmt = n=>Number(n||0).toLocaleString('en-US');
+  const esc = s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function hexA(hex,a){
+    const h=hex.replace('#',''); const n=parseInt(h.length===3?h.split('').map(c=>c+c).join(''):h,16);
+    return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')';
+  }
+  function copyText(t){
+    const done=()=>toast(TR('toastCopy'));
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done).catch(()=>fallback());
+    } else fallback();
+    function fallback(){
+      const ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed';
+      ta.style.opacity='0'; document.body.appendChild(ta); ta.select();
+      try{document.execCommand('copy');done();}catch(e){toast(TR('toastCopyFail'));}
+      document.body.removeChild(ta);
+    }
+  }
+  let toastT=0;
+  function toast(msg){
+    const el=$('#toast'); el.textContent=msg; el.classList.add('on');
+    clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('on'),1400);
+  }
+
+  /* ========== 2. 状态 ========== */
+  const M = RAW.meta, V = RAW.views, KEYS = Object.keys(V);
+  const cv=$('#cv'), stage=$('#stage'), insp=$('#insp');
+  const ctx=cv.getContext('2d');
+  const offLayer=new Set(), offGap=new Set();
+  let curKey=KEYS[0], view=null, P=null;      // P = 预处理后的视图
+  let sel=null, hover=null, edgeMode='all', drag=null, mouse={x:-1,y:-1};
+  let W=800,H=600,DPR=1, T={x:0,y:0,k:1};
+
+  function linkObj(l){
+    return Array.isArray(l)
+      ? {s:l[0], t:l[1], l:l[2], n:l[3], site:l[4]||'', trace:l[5]||0, src:Array.isArray(l[6])?l[6]:null}
+      : l;
+  }
+
+  function prep(v){
+    const nodes=v.nodes.map(n=>Object.assign({},n));
+    const map=new Map(); nodes.forEach(n=>map.set(n.i,n));
+    const links=v.links.map(linkObj);
+    // 环半径（导出器使用同心环布局：dist=0 焦点，dist=d 第 d 环）
+    const rs={};
+    nodes.forEach(n=>{const r=Math.hypot(n.x,n.y); (rs[n.L]=rs[n.L]||[]).push(r);});
+    const rings=Object.keys(rs).map(Number).sort((a,b)=>a-b).map(L=>{
+      const a=rs[L], r=a.reduce((s,x)=>s+x,0)/a.length;
+      return {L:L, r:r, count:nodes.filter(n=>n.L===L).length};
+    });
+    const rMax=Math.max.apply(null,rings.map(r=>r.r));
+    const byDeg=nodes.slice().sort((a,b)=>b.deg-a.deg);
+    // 预统计
+    const st={single:0,cross:0,byL:{static:0,runtime:0,asm:0,'static-reg':0,multi:0},byG:{}};
+    links.forEach(l=>{ st.byL[l.l]=(st.byL[l.l]||0)+1; if(l.n>1)st.cross++; else st.single++; });
+    nodes.forEach(n=>{ st.byG[n.g]=(st.byG[n.g]||0)+1; });
+    return {nodes:nodes, map:map, links:links, rings:rings, rMax:rMax, byDeg:byDeg, st:st};
+  }
+
+  function nodeVisible(n){ return !offGap.has(n.g); }
+  function edgeVisible(l){
+    if(offLayer.has(l.l)) return false;
+    if(edgeMode==='single') return l.n<=1;
+    if(edgeMode==='cross')  return l.n>1;
+    return true;
+  }
+  // 标签预算：缩放决定露出多少个函数名，其余退化成环上的点
+  function labelBudget(k){
+    if(k<0.50) return 14; if(k<0.75) return 28; if(k<1.00) return 44;
+    if(k<1.40) return 70; if(k<1.90) return 110; if(k<2.60) return 160; return 1e9;
+  }
+  function labelSet(){
+    const budget=labelBudget(T.k), set=new Set();
+    const list=P.nodes.filter(nodeVisible);
+    if(list.length<=budget){ list.forEach(n=>set.add(n.i)); }
+    else {
+      // 按角度分扇区，每扇区取度数最高的一个：让名称沿环均匀成冠，而不是挤在一段弧里
+      const secs=Math.max(6,Math.min(360,Math.round(budget)));
+      const best={};
+      list.forEach(function(n){
+        const a=(Math.atan2(n.y,n.x||1e-9)+Math.PI*2)%(Math.PI*2);
+        const s=Math.floor(a/(Math.PI*2/secs));
+        if(!best[s]||n.deg>best[s].deg) best[s]=n;
+      });
+      Object.keys(best).forEach(s=>set.add(best[s].i));
+    }
+    if(view.focus) set.add(view.focus);
+    if(sel) set.add(sel); if(hover) set.add(hover);
+    return set;
+  }
+  function pillW(n){ return Math.min(232, Math.max(56, n.n.length*6.9+22)); }
+  /* 径向标签：沿半径向外书写，天然错位；左半边翻转 180° 保证不倒着读。
+     名字按“到画布边缘的可用长度”截断，且保留尾部变体位（_8 / _10 / avx2 才是区分点）。 */
+  function fitText(name,maxW){
+    ctx.font='11px '+MONO;
+    if(ctx.measureText(name).width<=maxW) return name;
+    const n=name.length;
+    for(let k=Math.floor((n-1)/2);k>=4;k--){
+      const s=name.slice(0,k)+'…'+name.slice(n-k);
+      if(ctx.measureText(s).width<=maxW) return s;
+    }
+    return name.slice(0,6)+'…';
+  }
+  function labelGeom(n,X,Y){
+    const a=Math.atan2(n.y,n.x||1e-9);
+    const flip=Math.cos(a)<0;
+    const ux=Math.cos(a), uy=Math.sin(a);
+    const bx=X+ux*11, by=Y+uy*11;
+    const rot=a+(flip?Math.PI:0);
+    const dx0=Math.cos(rot), dy0=Math.sin(rot);
+    const dx=flip?-dx0:dx0, dy=flip?-dy0:dy0;   // 文字实际延伸方向（翻转时沿 -rot）
+    let avail=1e9;
+    if(dx>1e-6)      avail=Math.min(avail,(W-6-bx)/dx);
+    else if(dx<-1e-6) avail=Math.min(avail,(6-bx)/dx);
+    if(dy>1e-6)      avail=Math.min(avail,(H-6-by)/dy);
+    else if(dy<-1e-6) avail=Math.min(avail,(6-by)/dy);
+    const maxW=Math.max(40,Math.min(316,avail-14));
+    const txt=fitText(n.n,maxW);
+    ctx.font='11px '+MONO;
+    const w=ctx.measureText(txt).width;
+    return {a:a, flip:flip, rot:rot, bx:bx, by:by, w:w, h:16, txt:txt};
+  }
+  function rectPoly(g){
+    const c=Math.cos(g.rot), s=Math.sin(g.rot);
+    const x0=g.flip? -g.w-6 : 6, x1=g.flip? -6 : g.w+6, y0=-g.h/2, y1=g.h/2;
+    const P=function(x,y){ return {x:g.bx+x*c-y*s, y:g.by+x*s+y*c}; };
+    return [P(x0,y0),P(x1,y0),P(x1,y1),P(x0,y1)];
+  }
+  function overlapOA(A,B){                       // 有向矩形分离轴判定
+    const ax=[A[1].x-A[0].x,A[1].y-A[0].y], ay=[A[3].x-A[0].x,A[3].y-A[0].y];
+    const bx=[B[1].x-B[0].x,B[1].y-B[0].y], by=[B[3].x-B[0].x,B[3].y-B[0].y];
+    const axes=[ax,ay,bx,by];
+    for(let i=0;i<4;i++){
+      const n0=axes[i], L=Math.hypot(n0[0],n0[1])||1, nx=n0[0]/L, ny=n0[1]/L;
+      let a0=1e9,a1=-1e9,b0=1e9,b1=-1e9;
+      for(let j=0;j<4;j++){
+        const pa=A[j].x*nx+A[j].y*ny, pb=B[j].x*nx+B[j].y*ny;
+        if(pa<a0)a0=pa; if(pa>a1)a1=pa; if(pb<b0)b0=pb; if(pb>b1)b1=pb;
+      }
+      if(a1<b0||b1<a0) return false;
+    }
+    return true;
+  }
+
+  /* ========== 3. 投影与视图切换 ========== */
+  const OX=()=>W/2+T.x, OY=()=>H/2+T.y;
+  const sx=n=>n.x*T.k+OX(), sy=n=>n.y*T.k+OY();
+
+  function resize(){
+    const r=stage.getBoundingClientRect();
+    W=Math.max(360,Math.round(r.width)); H=Math.max(280,Math.round(r.height));
+    DPR=window.devicePixelRatio||1;
+    cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR);
+    cv.style.width=W+'px'; cv.style.height=H+'px';
+    draw();
+  }
+
+  function fit(){
+    if(!P) return;
+    const padX=142, padY=118;                       // 四周留给沿半径外伸的函数名
+    const kx=(W/2-padX)/(P.rMax||1), ky=(H/2-padY)/(P.rMax||1);
+    T.k=Math.max(0.18, Math.min(1.9, Math.min(kx,ky)));
+    T.x=0; T.y=0;
+    draw();
+  }
+  function zoomTo(k,px,py){
+    k=Math.max(0.18,Math.min(6,k));
+    px=px==null?W/2:px; py=py==null?H/2:py;
+    const wx=(px-OX())/T.k, wy=(py-OY())/T.k;
+    T.k=k; T.x=px-wx*k-W/2; T.y=py-wy*k-H/2;
+    draw();
+  }
+  function centerOn(n,k){
+    T.k=k||Math.max(T.k,1.15);
+    T.x=-(n.x*T.k); T.y=-(n.y*T.k);
+    draw();
+  }
+
+  function setView(key,keepT){
+    curKey=key; view=V[key]; P=prep(view);
+    sel=null; hover=null;
+    renderViews(); renderModes(); renderLegend(); renderCaption(); renderReadout(); renderScope(); updateSlice();
+    renderEmpty();
+    if(!keepT) fit();
+    syncHash();
+  }
+
+  /* ========== 4. 绘制 ========== */
+  function paint(c,pxW,pxH,scale,exporting){
+    const w=pxW/scale, h=pxH/scale;
+    c.setTransform(scale,0,0,scale,0,0);
+    c.clearRect(0,0,w,h);
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--stage')||'#0a0d11';
+    c.fillStyle=exporting?'#0a0d11':bg; c.fillRect(0,0,w,h);
+    if(!P) return;
+
+    const ox=w/2+T.x, oy=h/2+T.y, k=T.k;
+    const px_=x=>x*k+ox, py_=y=>y*k+oy;
+
+    // 1) 点阵背景（随平移移动，给拖拽以参照）
+    const gap=26, dxo=((T.x%gap)+gap)%gap, dyo=((T.y%gap)+gap)%gap;
+    c.fillStyle='rgba(255,255,255,0.028)';
+    for(let x=dxo;x<w;x+=gap) for(let y=dyo;y<h;y+=gap) c.fillRect(x,y,1,1);
+
+    // 2) 深度环 + 环标
+    c.lineWidth=1;
+    P.rings.forEach(rg=>{
+      if(rg.L===0) return;
+      const R=rg.r*k;
+      c.strokeStyle='rgba(255,255,255,0.055)';
+      c.beginPath(); c.arc(ox,oy,R,0,Math.PI*2); c.stroke();
+      const txt='L'+rg.L+' · '+rg.count;
+      c.font='9.5px '+MONO;
+      const tw=c.measureText(txt).width;
+      c.fillStyle='rgba(10,13,17,0.78)';
+      c.beginPath(); c.roundRect(ox-tw/2-6,oy-R+15-8,tw+12,16,2); c.fill();
+      c.fillStyle='rgba(255,255,255,0.42)';
+      c.textAlign='center'; c.textBaseline='middle';
+      c.fillText(txt, ox, oy-R+15);
+    });
+
+    const active = sel||hover;
+    const focusId = view.focus;
+    const labs = labelSet();
+
+    // 3) 边：先画“背景边”，再画“活跃边”
+    function edgeColor(l){ return LC[l.l]||'#5b6776'; }
+    function edgePass(onlyActive){
+      P.links.forEach(l=>{
+        if(!edgeVisible(l)) return;
+        const a=P.map.get(l.s), b=P.map.get(l.t);
+        if(!a||!b||!nodeVisible(a)||!nodeVisible(b)) return;
+        const isAct = active && (l.s===active||l.t===active);
+        if(onlyActive!==!!isAct) return;
+        const touchF = (l.s===focusId||l.t===focusId);
+        let alpha, width;
+        if(isAct){ alpha=0.92; width=l.n>1?1.9:1.5; }
+        else if(active){ alpha=touchF?0.16:0.05; width=1; }
+        else { alpha=touchF?0.19:0.07; width=l.n>1?1.2:1; }
+        if(l.l==='multi'&&!isAct) alpha+=0.04;
+
+        let x1=px_(a.x), y1=py_(a.y), x2=px_(b.x), y2=py_(b.y);
+        c.strokeStyle=hexA(edgeColor(l),alpha); c.lineWidth=width;
+        c.beginPath();
+        if(a.i===b.i){                                  // 自环
+          const r=9; c.arc(x1,y1-4,r,Math.PI*0.2,Math.PI*0.8,true);
+        } else {
+          c.moveTo(x1,y1); c.lineTo(x2,y2);             // 一律直连：辐条成扇，内部边成淡网
+        }
+        c.stroke();
+      });
+    }
+    edgePass(false); edgePass(true);
+
+    // 4) 节点：环上的点 + 沿半径的标签（标签做分离轴防重叠，压住的退回成点）
+    const dots=[], cand=[];
+    P.nodes.forEach(n=>{
+      if(!nodeVisible(n)) return;
+      const X=px_(n.x), Y=py_(n.y);
+      if(n.i===focusId || !labs.has(n.i)){ dots.push([n,X,Y]); return; }
+      const g=labelGeom(n,X,Y);
+      cand.push({n:n, X:X, Y:Y, g:g, poly:rectPoly(g),
+                 prio:(n.i===sel||n.i===hover)?1e9:n.deg});
+    });
+    cand.sort((a,b)=>b.prio-a.prio);
+    const placed=[];
+    cand.forEach(function(o){
+      if(placed.some(function(q){ return overlapOA(o.poly,q.poly); })) dots.push([o.n,o.X,o.Y]);
+      else placed.push(o);
+    });
+    // 点
+    dots.forEach(function(it){
+      const n=it[0], X=it[1], Y=it[2];
+      const col=GC[n.g]||'#6b7784';
+      const isSel=(n.i===sel), isHov=(n.i===hover);
+      c.beginPath(); c.arc(X,Y,isSel||isHov?3.4:2.7,0,Math.PI*2);
+      c.fillStyle=hexA(col, isSel||isHov?1:0.9); c.fill();
+      if(isSel){ c.strokeStyle='#fff'; c.lineWidth=1; c.beginPath(); c.arc(X,Y,6.5,0,Math.PI*2); c.stroke(); }
+    });
+    // 标签
+    placed.forEach(function(o){
+      const n=o.n, g=o.g;
+      c.strokeStyle='rgba(255,255,255,.16)'; c.lineWidth=1;
+      c.beginPath(); c.moveTo(o.X,o.Y); c.lineTo(g.bx,g.by); c.stroke();
+
+      c.save(); c.translate(g.bx,g.by); c.rotate(g.rot);
+      c.font='11px '+MONO; c.textBaseline='middle'; c.textAlign='left';
+      const x0=g.flip? -g.w-6 : 6;
+      c.fillStyle='rgba(10,13,17,.70)';
+      c.beginPath(); c.roundRect(x0-4,-8,g.w+8,16,2); c.fill();
+      c.fillStyle = (n.i===sel) ? '#ffffff'
+                  : (n.g==='HAS_INBOUND' ? (n.i===hover?'#ffffff':'#c3cfda') : GC[n.g]);
+      c.fillText(g.txt, x0, 0.5);
+      c.restore();
+    });
+
+    // 5) 焦点卡（中心，压住所有辐条）
+    const f=P.map.get(focusId);
+    if(f && nodeVisible(f)) drawFocusCard(c, f, px_(f.x), py_(f.y), k);
+
+    // 6) 悬停提示
+    if(hover && !drag && P.map.get(hover) && !exporting) drawTip(c, P.map.get(hover));
+
+    // 7) 导出时把标题/读数/水印烧进图里
+    if(exporting) drawExportOverlay(c,w,h);
+  }
+
+  function drawFocusCard(c,n,X,Y,k){
+    const wpx=Math.min(330,Math.max(212,n.n.length*8.1+52)), hpx=62;
+    const bx=X-wpx/2, by=Y-hpx/2;
+    // 晕环
+    c.strokeStyle='rgba(238,243,248,.10)'; c.lineWidth=1;
+    c.beginPath(); c.arc(X,Y,Math.max(wpx,hpx)/2+16,0,Math.PI*2); c.stroke();
+    // 卡片
+    c.fillStyle='#eef3f8'; c.beginPath(); c.roundRect(bx,by,wpx,hpx,4); c.fill();
+    c.fillStyle=GC[n.g]||'#4b5866'; c.fillRect(bx+1,by+1,3,hpx-2);
+    c.textAlign='left'; c.textBaseline='middle';
+    c.font='9px '+MONO; c.fillStyle='#6b7784';
+    c.fillText(TR('focusCard',{o:outDeg(n.i),i:inDeg(n.i)}), bx+11, by+11);
+    c.font='600 12.5px '+MONO; c.fillStyle='#0a0e12';
+    c.fillText(n.n.length>32?n.n.slice(0,31)+'…':n.n, bx+11, by+28);
+    c.font='9.5px '+MONO; c.fillStyle='#4e5a66';
+    c.fillText(n.f.length>46?n.f.slice(0,45)+'…':n.f, bx+11, by+47);
+    // 归因徽标
+    if(n.g!=='HAS_INBOUND'){
+      c.font='9px '+MONO; const lab=GN[n.g]||n.g;
+      const tw=c.measureText(lab).width+8;
+      c.fillStyle=hexA(GC[n.g],.16); c.beginPath();
+      c.roundRect(bx+wpx-11-tw,by+7,tw,14,2); c.fill();
+      c.fillStyle=GC[n.g]; c.textAlign='center'; c.fillText(lab,bx+wpx-11-tw/2,by+14.5);
+    }
+  }
+
+  function drawTip(c,n){
+    const X=sx(n), Y=sy(n);
+    const lines=[n.n, n.f, TR('tipLine',{l:n.L,o:outDeg(n.i),i:inDeg(n.i),g:(GN[n.g]||n.g)})];
+    c.font='11.5px '+MONO;
+    const w1=c.measureText(lines[0]).width;
+    c.font='10px '+MONO;
+    const w2=Math.max(c.measureText(lines[1]).width, c.measureText(lines[2]).width);
+    const wpx=Math.max(w1,w2)+18, hpx=12+3*14;
+    let bx=X+14, by=Y+12;
+    if(bx+wpx>W-6) bx=X-14-wpx;
+    if(by+hpx>H-6) by=Y-12-hpx;
+    c.fillStyle='rgba(20,26,33,.96)'; c.strokeStyle='rgba(255,255,255,.14)'; c.lineWidth=1;
+    c.beginPath(); c.roundRect(bx,by,wpx,hpx,3); c.fill(); c.stroke();
+    c.textAlign='left'; c.textBaseline='top';
+    c.font='11.5px '+MONO; c.fillStyle='#eef3f8'; c.fillText(lines[0],bx+9,by+8);
+    c.font='10px '+MONO; c.fillStyle='#8c98a5';
+    c.fillText(lines[1],bx+9,by+24);
+    c.fillStyle='#5f7080'; c.fillText(lines[2],bx+9,by+39);
+  }
+
+  function drawExportOverlay(c,w,h){
+    c.textAlign='left'; c.textBaseline='top';
+    c.font='600 13px ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif';
+    c.fillStyle='#eef3f8'; c.fillText(vtitle(view), 16, 16);
+    c.font='11.5px ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif';
+    c.fillStyle='#8c98a5'; c.fillText(vnote(view), 16, 36);
+    c.font='10px '+MONO; c.fillStyle='#5b6773';
+    c.fillText(TR('exportSlice',{i:KEYS.indexOf(curKey)+1,k:KEYS.length,
+      tn:fmt(M.total_nodes),tm:fmt(M.total_edges)}), 16, 56);
+    c.font='10.5px '+MONO; c.fillStyle='#4e5a66';
+    c.fillText(TR('exportFoot',{md5:M.anchor,commit:M.commit.slice(0,12),gen:(M.generated||'')}), 16, h-22);
+    c.textAlign='right';
+    c.fillText(TR('exportEdges',{m:fmt(view.stats.links),n:fmt(view.stats.nodes)}), w-16, h-22);
+  }
+
+  function draw(){ paint(ctx, cv.width, cv.height, DPR, false); zval(); }
+
+  /* 度数（视图内） */
+  function outDeg(id){ return P.links.filter(l=>l.s===id).length; }
+  function inDeg(id){ return P.links.filter(l=>l.t===id).length; }
+
+  /* ========== 5. 交互 ========== */
+  function hitTest(mx,my){
+    if(!P) return null;
+    const labs=labelSet();
+    for(let i=P.nodes.length-1;i>=0;i--){
+      const n=P.nodes[i]; if(!nodeVisible(n)) continue;
+      const X=sx(n), Y=sy(n);
+      if(Math.abs(mx-X)<=7&&Math.abs(my-Y)<=7) return n;
+      if(labs.has(n.i)&&n.i!==view.focus){
+        const g=labelGeom(n,X,Y);
+        const dx=mx-g.bx, dy=my-g.by;
+        const lx= dx*Math.cos(g.rot)+dy*Math.sin(g.rot);
+        const ly=-dx*Math.sin(g.rot)+dy*Math.cos(g.rot);
+        const x0=g.flip? -g.w-10 : 2, x1=g.flip? -2 : g.w+10;
+        if(lx>=x0&&lx<=x1&&ly>=-9&&ly<=9) return n;
+      }
+    }
+    return null;
+  }
+  function localXY(e){
+    const r=cv.getBoundingClientRect();
+    return {x:e.clientX-r.left, y:e.clientY-r.top};
+  }
+
+  cv.addEventListener('wheel',function(e){
+    e.preventDefault();
+    const p=localXY(e);
+    zoomTo(T.k*(e.deltaY<0?1.14:0.88), p.x, p.y);
+  },{passive:false});
+
+  cv.addEventListener('mousedown',function(e){
+    const p=localXY(e);
+    drag={x:p.x,y:p.y,tx:T.x,ty:T.y,moved:false};
+  });
+  cv.addEventListener('mousemove',function(e){
+    const p=localXY(e); mouse=p;
+    if(drag){
+      if(Math.abs(p.x-drag.x)>2||Math.abs(p.y-drag.y)>2){
+        drag.moved=true;
+        T.x=drag.tx+(p.x-drag.x); T.y=drag.ty+(p.y-drag.y);
+        draw();
+      }
+      return;
+    }
+    const n=hitTest(p.x,p.y); const id=n?n.i:null;
+    if(id!==hover){ hover=id; cv.style.cursor=id?'pointer':'grab'; draw(); }
+  });
+  cv.addEventListener('mouseup',function(e){
+    const moved=drag&&drag.moved; drag=null;
+    if(moved){ draw(); return; }
+    const p=localXY(e); const n=hitTest(p.x,p.y);
+    if(n){ selectNode(n.i); } else { selectNode(null); }
+  });
+  cv.addEventListener('mouseleave',function(){ hover=null; draw(); });
+  cv.addEventListener('dblclick',function(){ fit(); });
+  window.addEventListener('resize',resize);
+
+  document.addEventListener('keydown',function(e){
+    if(e.target&&/INPUT|TEXTAREA/.test(e.target.tagName)){ if(e.key==='Escape') e.target.blur(); return; }
+    if(e.key==='Escape'){ selectNode(null); $('#hits').style.display='none'; }
+    if(e.key==='f'||e.key==='F') fit();
+    if(e.key==='/'){ e.preventDefault(); $('#search').focus(); }
+  });
+
+  /* ========== 6. 左栏 ========== */
+  function vtitle(v){ return (LANG==='en'&&v.title_en)?v.title_en:v.title; }
+  function vnote(v){ return (LANG==='en'&&v.note_en)?v.note_en:(v.note||''); }
+  function viewStats(k){
+    const v=V[k];
+    const links=v.links.map(linkObj);
+    const byL={static:0,runtime:0,asm:0,'static-reg':0,multi:0};
+    let single=0,cross=0;
+    links.forEach(l=>{ byL[l.l]=(byL[l.l]||0)+1; if(l.n>1) cross++; else single++; });
+    return {n:v.stats.nodes, m:v.stats.links, byL:byL, single:single, cross:cross};
+  }
+  function focusLabel(id){
+    const p=String(id||'').split('@');
+    const file=(p[1]||'').replace(/^ffmpeg-src#/,'').replace(/#/g,'/');
+    return p[0]+(file?' · '+file:'');
+  }
+
+  function renderViews(){
+    const box=$('#views'); box.innerHTML='';
+    KEYS.forEach(function(k){
+      const v=V[k], st=viewStats(k);
+      const b=document.createElement('button');
+      b.className='vcard'+(k===curKey?' on':''); b.dataset.k=k;
+      const seg=LAYERS.concat(['multi']).map(function(L){
+        const w=st.byL[L]||0; return w? '<i style="width:'+(w/st.m*100).toFixed(2)+'%;background:'+LC[L]+'" title="'+LN[L]+' '+w+'"></i>':'';
+      }).join('');
+      b.innerHTML='<div class="vc-top"><span class="vc-title">'+esc(vtitle(v))+'</span>'+
+        '<span class="vc-cnt">'+TR('nEdges',{n:fmt(st.m)})+'</span></div>'+
+        '<div class="vc-note">'+esc(vnote(v))+'</div>'+
+        '<div class="vc-fn">'+esc(focusLabel(v.focus))+'</div>'+
+        '<div class="vc-bar">'+seg+'</div>'+
+        '<div class="vc-nums"><span><span class="b">'+fmt(st.single)+'</span> '+TR('single')+'</span>'+
+        '<span><span class="b">'+fmt(st.cross)+'</span> '+TR('cross')+'</span>'+
+        '<span><span class="b">'+fmt(st.n)+'</span> '+TR('nodes')+'</span></div>';
+      b.onclick=function(){ if(k!==curKey) setView(k); };
+      box.appendChild(b);
+    });
+    $('#vtag').textContent=TR('vtag',{n:KEYS.length});
+  }
+
+  function renderModes(){
+    const box=$('#emodes'); const st=viewStats(curKey);
+    const items=[['all',TR('modeAll'),st.m],['single',TR('modeSingle'),st.single],['cross',TR('modeCross'),st.cross]];
+    box.innerHTML=items.map(function(it){
+      return '<button data-m="'+it[0]+'" class="'+(edgeMode===it[0]?'on':'')+'">'+it[1]+
+             '<b>'+fmt(it[2])+'</b></button>';
+    }).join('');
+    box.onclick=function(e){
+      const b=e.target.closest('button[data-m]'); if(!b)return;
+      edgeMode=b.dataset.m; renderModes(); draw();
+    };
+  }
+
+  function renderLegend(){
+    // 图层
+    const st=viewStats(curKey);
+    const LL=['static','runtime','asm','static-reg','multi'];
+    $('#lgLayer').innerHTML=LL.map(function(L){
+      const c=st.byL[L]||0, off=offLayer.has(L);
+      return '<div class="lg'+(off?' off':'')+'" data-k="layer:'+L+'" title="'+LN[L]+'">'+
+        '<span class="lg-line" style="background:'+LC[L]+'"></span>'+LS[L]+
+        '<span class="cnt">'+fmt(c)+'</span></div>';
+    }).join('');
+    // 归因
+    const gg={}; P.nodes.forEach(n=>gg[n.g]=(gg[n.g]||0)+1);
+    const GK=['HAS_INBOUND','UNKNOWN_ASM','UNKNOWN_DYNAMIC','DEAD_SUSPECT','NO_FILE_MAP'];
+    $('#lgGap').innerHTML=GK.map(function(g){
+      const c=gg[g]||0, off=offGap.has(g);
+      return '<div class="lg'+(off?' off':'')+'" data-k="gap:'+g+'" title="'+esc(GD[g])+'">'+
+        '<span class="sw" style="background:'+GC[g]+'"></span>'+GN[g]+
+        '<span class="cnt">'+fmt(c)+'</span></div>';
+    }).join('');
+    $('#gapfoot').textContent=TR('gapFootNote');
+    const on={layer:$('#lgLayer'),gap:$('#lgGap')};
+    ['layer','gap'].forEach(function(kind){
+      on[kind].onclick=function(e){
+        const el=e.target.closest('.lg[data-k]'); if(!el)return;
+        const k=el.dataset.k.split(':')[1];
+        const set=kind==='gap'?offGap:offLayer;
+        if(set.has(k)){set.delete(k);el.classList.remove('off');} else {set.add(k);el.classList.add('off');}
+        draw(); renderReadout();
+      };
+    });
+  }
+
+  function renderCaption(){
+    $('#caption b').textContent=vtitle(view);
+    $('#caption span').textContent=vnote(view);
+  }
+
+  function renderReadout(){
+    const st=viewStats(curKey);
+    let t='';
+    if(edgeMode==='all'){
+      t=TR('roAll',{m:fmt(st.m),s:fmt(st.single),c:fmt(st.cross)});
+      if(st.byL.runtime) t+=' · '+TR('roRuntime',{n:fmt(st.byL.runtime)});
+      if(st.byL.asm) t+=' · '+TR('roAsm',{n:fmt(st.byL.asm)});
+    } else if(edgeMode==='single'){
+      t=TR('roSingle',{n:fmt(st.single),r:fmt(st.byL.runtime),st:fmt(st.byL.static),
+                      a:fmt(st.byL.asm),g:fmt(st.byL['static-reg'])});
+    } else {
+      t=TR('roCross',{n:fmt(st.cross)});
+    }
+    $('#readout').innerHTML=t;
+  }
+  function renderScope(){
+    $('#scope').textContent=TR('scope',{n:fmt(view.stats.nodes)});
+  }
+  /* 切片占比：四处同时更新（顶栏徽标 / 画布提示 / 页脚 / 导出水印） */
+  function updateSlice(){
+    if(!view) return;
+    const idx=KEYS.indexOf(curKey)+1, tot=KEYS.length;
+    const n=view.stats.nodes||1, m=view.stats.links||1;
+    const tn=M.total_nodes||1, tm=M.total_edges||1;
+    const pn=(n/tn*100).toFixed(2), pm=(m/tm*100).toFixed(2);
+    $('#slicebadge').innerHTML=TR('sliceBadge',{i:idx,k:tot,n:fmt(n),tn:fmt(tn),p:pn});
+    $('#slicehint').innerHTML=TR('sliceHint',{m:fmt(m),tm:fmt(tm),pm:pm});
+    $('#mf-right').textContent=TR('mfRight',{
+      k:KEYS.length,n:fmt(KEYS.reduce((s,k)=>s+V[k].stats.nodes,0)),
+      m:fmt(KEYS.reduce((s,k)=>s+V[k].stats.links,0)),
+      tn:fmt(tn),tm:fmt(tm),
+      pn:(KEYS.reduce((s,k)=>s+V[k].stats.nodes,0)/tn*100).toFixed(2),
+      pm:(KEYS.reduce((s,k)=>s+V[k].stats.links,0)/tm*100).toFixed(2)});
+  }
+
+  /* ========== 7. 右栏 ========== */
+  function selectNode(id){
+    sel=id;
+    if(!id){ renderEmpty(); draw(); syncHash(); return; }
+    const n=P.map.get(id); if(!n){ renderEmpty(); return; }
+    renderNode(n); draw(); syncHash();
+    // 面板滚动到顶
+    $('#inspector').scrollTop=0;
+  }
+
+  function renderEmpty(){
+    const st=viewStats(curKey);
+    const gg={}; P.nodes.forEach(n=>gg[n.g]=(gg[n.g]||0)+1);
+    const keys=LAYERS.concat(['multi']).filter(L=>st.byL[L]);
+    const bar=keys.map(L=>'<i style="width:'+(st.byL[L]/st.m*100).toFixed(2)+'%;background:'+LC[L]+'"></i>').join('');
+    const lk=keys.map(L=>'<span><span class="sw" style="background:'+LC[L]+';width:7px;height:7px"></span>'+LS[L]+' '+fmt(st.byL[L])+'</span>').join('');
+    let ledger=''+
+      '<tr><td>'+TR('ledgerEdge')+'</td><td>'+fmt(st.m)+'</td></tr>'+
+      '<tr><td>'+TR('ledgerSingle')+'</td><td>'+fmt(st.single)+'</td></tr>'+
+      '<tr><td>'+TR('ledgerCross')+'</td><td>'+fmt(st.cross)+'</td></tr>'+
+      '<tr><td>'+TR('ledgerNodes')+'</td><td>'+fmt(st.n)+'</td></tr>';
+    if(gg.DEAD_SUSPECT) ledger+='<tr><td>'+TR('ledgerDead')+'</td><td>'+TR('nodesUnit',{n:fmt(gg.DEAD_SUSPECT)})+'</td></tr>';
+    if(gg.UNKNOWN_ASM)  ledger+='<tr><td>'+TR('ledgerAsm')+'</td><td>'+TR('nodesUnit',{n:fmt(gg.UNKNOWN_ASM)})+'</td></tr>';
+
+    let hi='';
+    if(gg.DEAD_SUSPECT&&gg.DEAD_SUSPECT>=st.n*0.2)
+      hi=TR('hiDead',{n:fmt(gg.DEAD_SUSPECT)});
+    else if(st.byL.runtime) hi=TR('hiRuntime',{n:fmt(st.byL.runtime)});
+    else if(st.byL.asm) hi=TR('hiAsm',{n:fmt(st.byL.asm)});
+    else if(st.cross) hi=TR('hiCross',{n:fmt(st.cross)});
+
+    const tn=M.total_nodes||1, tm=M.total_edges||1;
+    insp.innerHTML=
+      '<div class="empty">'+
+        '<h4>'+TR('emptyTitle')+'</h4>'+
+        '<div class="sub">'+TR('emptySub',{title:esc(vtitle(view)),focus:esc(fname(view.focus))})+'</div>'+
+        '<div class="sub" style="margin-top:-9px">'+TR('sliceLine',{
+            n:fmt(view.stats.nodes),m:fmt(view.stats.links),tn:fmt(tn),tm:fmt(tm),
+            pn:(view.stats.nodes/tn*100).toFixed(2),pm:(view.stats.links/tm*100).toFixed(2)})+'</div>'+
+        '<table class="ledger">'+ledger+'</table>'+
+        '<div class="lbar">'+bar+'</div>'+
+        '<div class="lkeys">'+lk+'</div>'+
+        (hi? '<p class="hint">'+hi+'</p>':'')+
+        '<p class="hint">'+TR('hintClick')+'</p>'+
+        '<p class="hint">'+TR('hintModes')+'</p>'+
+      '</div>';
+  }
+  function fname(id){ return String(id||'').split('@')[0]; }
+
+  function shortFile(f){
+    if(!f) return '';
+    const p=f.split(/[#\\\/]/).filter(Boolean);
+    return p.slice(-2).join('/');
+  }
+  function layerChips(l){
+    if(l.src&&l.src.length){
+      const cells=LAYERS.map(L=>{
+        const on=l.src.indexOf(L)>=0;
+        return '<i class="'+(on?'on':'')+'" style="'+(on?'background:'+LC[L]:'')+'" title="'+LN[L]+'"></i>';
+      }).join('');
+      return '<span class="mx" title="'+TR('mxTitle')+'">'+cells+'</span>';
+    }
+    return '<span class="mx" title="'+TR('mxTitleNo')+'">'+
+      '<i style="width:auto;padding:0 3px;background:'+hexA(LC[l.l]||'#888',.25)+';color:'+LC[l.l]+'">'+
+      TR('nSrc',{n:l.n})+'</i></span>';
+  }
+  function edgeRow(id,l){
+    const t=P.map.get(id); if(!t) return '';
+    const site=l.site? shortFile(l.site):'';
+    return '<div class="erow" data-n="'+esc(id)+'">'+
+      '<div class="er1"><span class="nm">'+esc(t.n)+'</span>'+layerChips(l)+'</div>'+
+      '<div class="er2">'+esc(site||t.f)+(l.trace?' <span class="tr">'+TR('traceSuffix',{n:fmt(l.trace)})+'</span>':'')+'</div>'+
+    '</div>';
+  }
+  function renderNode(n){
+    const out=P.links.filter(l=>l.s===n.i).sort((a,b)=>b.n-a.n);
+    const inb=P.links.filter(l=>l.t===n.i).sort((a,b)=>b.n-a.n);
+    const CAP=40;
+    let h='<div class="nhead">'+
+      '<div class="gn">'+esc(n.n)+'</div>'+
+      '<div class="gf">'+esc(n.f)+'</div>'+
+      '<div class="badges">'+
+        '<span class="bdg" style="border-color:'+hexA(GC[n.g],.5)+';color:'+GC[n.g]+'">'+GN[n.g]+'</span>'+
+        '<span class="bdg">L'+n.L+'</span>'+
+        '<span class="bdg">'+TR('badgeDeg',{o:out.length,i:inb.length})+'</span>'+
+      '</div>'+
+      (n.g==='HAS_INBOUND'? '' :
+        '<div class="gapdef"><b>'+GN[n.g]+'</b>'+TR('colon')+esc(GD[n.g]||'')+'</div>')+
+      '<div class="mxhint">'+TR('mxHintPre')+
+        '<s style="color:#5b68d6">'+TR('mxS')+'</s>/<s style="color:#3fbb8e">'+TR('mxR')+
+        '</s>/<s style="color:#9d7ce8">'+TR('mxA')+'</s>/<s style="color:#d8a15c">'+TR('mxG')+'</s>'+
+        TR('mxHintPost')+'</div>'+
+      '<div class="acts"><button id="act-copy">'+TR('actCopy')+'</button><button id="act-link">'+TR('actLink')+'</button></div>'+
+    '</div>';
+
+    if(out.length){
+      h+='<div class="esec">'+TR('esecOut',{n:out.length})+'<span class="r">'+TR('esecSort')+'</span></div>';
+      h+=out.slice(0,CAP).map(l=>edgeRow(l.t,l)).join('');
+      if(out.length>CAP) h+='<div class="more">'+TR('moreRows',{cap:CAP,n:out.length})+'</div>';
+    }
+    if(inb.length){
+      h+='<div class="esec">'+TR('esecIn',{n:inb.length})+'<span class="r">'+TR('esecCaller')+'</span></div>';
+      h+=inb.slice(0,CAP).map(l=>edgeRow(l.s,l)).join('');
+      if(inb.length>CAP) h+='<div class="more">'+TR('moreRows',{cap:CAP,n:inb.length})+'</div>';
+    }
+    if(!out.length&&!inb.length) h+='<p class="hint">'+TR('noEdges')+'</p>';
+    insp.innerHTML=h;
+
+    insp.querySelectorAll('.erow').forEach(function(el){
+      el.onclick=function(){ selectNode(el.dataset.n); };
+    });
+    $('#act-copy').onclick=function(){ copyText(evidenceText(n,out,inb)); };
+    $('#act-link').onclick=function(){ copyText(permalink(n.i)); };
+  }
+
+  function evidenceText(n,out,inb){
+    let s='`'+n.n+'`  ('+n.f+')\n  '+TR('evAttr',{g:n.g,l:n.L,o:out.length,i:inb.length})+'\n';
+    if(out.length){
+      s+='  '+TR('evOutHead')+'\n';
+      out.slice(0,8).forEach(function(l){
+        const t=P.map.get(l.t);
+        s+='   → '+t.n+'  '+(l.site||t.f)+'  ['+(l.src?l.src.join('+'):l.l)+']'+(l.trace?' trace '+l.trace:'')+'\n';
+      });
+    }
+    if(inb.length){
+      s+='  '+TR('evInHead')+'\n';
+      inb.slice(0,8).forEach(function(l){
+        const t=P.map.get(l.s);
+        s+='   ← '+t.n+'  '+(l.site||t.f)+'  ['+(l.src?l.src.join('+'):l.l)+']'+(l.trace?' trace '+l.trace:'')+'\n';
+      });
+    }
+    s+='  '+TR('evFooter',{md5:M.anchor,commit:M.commit.slice(0,12),view:vtitle(view)});
+    return s;
+  }
+
+  /* ========== 8. 搜索（只搜当前切片，并明说范围） ========== */
+  const sBox=$('#hits'), sInput=$('#search');
+  sInput.addEventListener('input',function(){
+    const q=sInput.value.trim().toLowerCase();
+    if(!q){ sBox.style.display='none'; return; }
+    const res=P.nodes.filter(n=>n.n.toLowerCase().indexOf(q)>=0)
+      .sort((a,b)=>b.deg-a.deg).slice(0,30);
+    sBox.innerHTML = res.length
+      ? res.map(n=>'<div class="hit" data-i="'+esc(n.i)+'"><span class="nm">'+esc(n.n)+'</span>'+
+          '<span class="fp">'+esc(n.f)+'</span></div>').join('')
+      : '<div class="none">'+TR('searchNone',{n:fmt(view.stats.nodes)})+'<br>'+
+        TR('searchScope',{k:KEYS.length,n:fmt(M.total_nodes)})+'</div>';
+    sBox.style.display='block';
+  });
+  sBox.addEventListener('click',function(e){
+    const d=e.target.closest('.hit'); if(!d)return;
+    const n=P.map.get(d.dataset.i); if(!n)return;
+    sBox.style.display='none'; sInput.value='';
+    selectNode(n.i); centerOn(n, Math.max(T.k,1.0));
+  });
+
+  /* ========== 9. 顶栏 / 底栏 / 链接 / 导出 ========== */
+  $('#m-md5').textContent=M.anchor;
+  $('#m-commit').textContent=M.commit.slice(0,12);
+  $('#m-conf').textContent=M.configure;
+  $('#m-conf').title=M.configure;
+  $('#m-gen').textContent=M.generated;
+  updateSlice();
+
+  document.querySelectorAll('.mf button[data-copy]').forEach(function(b){
+    b.onclick=function(){
+      const k=b.dataset.copy;
+      copyText(k==='md5'?M.anchor:k==='commit'?M.commit:M.configure);
+    };
+  });
+
+  function permalink(nid){
+    const base=location.href.split('#')[0];
+    let h='#v='+curKey+'&lang='+LANG;
+    if(nid) h+='&n='+encodeURIComponent(nid);
+    return base+h;
+  }
+  function syncHash(){
+    try{ history.replaceState(null,'',permalink(sel)); }catch(e){}
+  }
+  $('#btn-link').onclick=function(){ copyText(permalink(sel)); };
+  function setLang(l){
+    LANG=(l==='en')?'en':'zh';
+    try{ localStorage.setItem('acd-lang',LANG); }catch(e){}
+    buildLex(); applyI18n();
+    renderViews(); renderModes(); renderLegend(); renderCaption(); renderReadout(); renderScope(); updateSlice();
+    if(sel&&P&&P.map.get(sel)) renderNode(P.map.get(sel)); else renderEmpty();
+    syncHash(); draw();
+  }
+  $('#btn-lang').onclick=function(){ setLang(LANG==='en'?'zh':'en'); };
+  $('#btn-png').onclick=function(){
+    const scale=2;
+    const out=document.createElement('canvas');
+    out.width=Math.round(W*scale); out.height=Math.round(H*scale);
+    paint(out.getContext('2d'), out.width, out.height, scale, true);
+    out.toBlob(function(blob){
+      if(!blob){ toast(TR('toastPngFail')); return; }
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download='acd-'+curKey+(sel?'-'+fname(sel):'')+'.png';
+      document.body.appendChild(a); a.click();
+      setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},400);
+      toast(TR('toastPng'));
+    },'image/png');
+  };
+
+  $('#zoom').onclick=function(e){
+    const d=e.target.closest('button[data-z]'); if(!d)return;
+    const z=d.dataset.z;
+    if(z==='f') fit(); else zoomTo(T.k*(z==='1'?1.25:0.8));
+  };
+  function zval(){ $('#zval').textContent=Math.round(T.k*100)+'%'; }
+
+  /* ========== 10. 启动 ========== */
+  (function boot(){
+    // 读 hash 复原视图 / 选中
+    let h={}; if(location.hash.length>1){ location.hash.slice(1).split('&').forEach(function(kv){
+      const p=kv.split('='); h[p[0]]=decodeURIComponent(p[1]||''); }); }
+    const key=(h.v&&V[h.v])?h.v:KEYS[0];
+    // 语言：hash > localStorage > 浏览器语言（非中文一律英文）
+    let pre=(h.lang==='en'||h.lang==='zh')?h.lang:null;
+    if(!pre){ try{ const s=localStorage.getItem('acd-lang'); if(s==='en'||s==='zh') pre=s; }catch(e){} }
+    if(!pre) pre=((navigator.language||'').toLowerCase().indexOf('zh')===0)?'zh':'en';
+    LANG=pre; buildLex(); applyI18n();
+    curKey=key; view=V[key]; P=prep(view);
+    renderViews(); renderModes(); renderLegend(); renderCaption(); renderReadout(); renderScope(); updateSlice();
+    renderEmpty();
+    resize(); fit();
+    if(h.n&&P.map.get(h.n)){ selectNode(h.n); }
+  })();
+})();
+</script>
+</body>
+</html>

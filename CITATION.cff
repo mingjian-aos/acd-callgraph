@@ -1,0 +1,38 @@
+cff-version: 1.2.0
+message: "若引用本仓，请同时保留图 md5（b357bf8ea8a4b6bae4892ab99254bf2a）与 FFmpeg commit（818cecc6e1afab932cf4d40ef0d7b8cd40311a17）。"
+title: "ACD：多源合流函数级调用图（FFmpeg 9.1-dev 实证）"
+abstract: >-
+  在 FFmpeg 9.1-dev（n9.1-dev-1030-g818cecc6，MinGW-w64 / x86_64）上构建的
+  函数级调用图：38,697 个调用方节点、114,175 条边，由静态解析（含宏展开）、
+  运行时插桩、汇编反汇编、函数指针注册表四类来源合流。仓内交付数据、方法、
+  判据与口径，不含构建引擎；边级 precision / recall 未测。
+type: dataset
+authors:
+  - name: "小鹏 (Xiao Peng)"
+    email: "mingjian_aos@163.com"
+version: "v4.0"
+date-released: "2026-11-24"
+license: CC-BY-4.0
+keywords:
+  - call graph
+  - multi-source fusion
+  - static analysis
+  - runtime instrumentation
+  - disassembly
+  - FFmpeg
+  - program analysis
+  - function reach
+identifiers:
+  - type: other
+    value: "b357bf8ea8a4b6bae4892ab99254bf2a"
+    description: "图 md5（发布包实物）"
+  - type: other
+    value: "d690c09ef8f148091e95871452a77259"
+    description: "图 md5（报告体依据；原件不随仓、不随 Release 分发）"
+preferred-citation:
+  type: report
+  title: "ACD 多源合流调用图 · v4.0（对外开源公布版）"
+  authors:
+    - name: "小鹏 (Xiao Peng)"
+  year: 2026
+  month: 11

@@ -1,0 +1,21 @@
+Creative Commons Attribution 4.0 International (CC BY 4.0)
+
+本仓的**文档、报告、图数据与查看器**按 CC BY 4.0 授权。
+
+你可以自由地共享（复制、分发、传输）与改编（修改、转换、再创作），
+包括商业用途，条件是：
+
+1. **署名**：注明来源为本仓库（ACD / acd-callgraph）；
+2. **保留出处**：引用任何数字时，同时保留该数字对应的**图 md5**与 **FFmpeg commit**；
+3. **标注修改**：若改动了数据或结论，需说明改动内容；
+4. **不得暗示背书**：不得暗示原作者为你或你的使用背书。
+
+许可全文（唯一权威文本）：
+https://creativecommons.org/licenses/by/4.0/legalcode
+
+适用范围：`report/`、`docs/`、`viewer/`、根目录 `README.md` / `README.en.md` /
+`GUIDE.en.md` / `导读.md` / `*.png`、`CITATION.cff`、`CHANGELOG.md`，以及随 Release
+分发的图数据（`acd_graph.json`、`denominator.json`、`target_set.json`）。
+
+第三方：FFmpeg 源码不在本仓，其许可证以官方仓库为准。本仓只分发分析结果
+（函数名、文件路径、行号、计数），不含任何 FFmpeg 源码片段。
