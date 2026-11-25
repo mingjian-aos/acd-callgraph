@@ -1,0 +1,36 @@
+名称: ci
+
+python scripts/verify_graph.py /tmp/acdgraph/acd_graph.json:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+权限:
+  内容: 读取
+
+作业:
+  冒烟:
+    名称: 冒烟 (py${{ matrix.python-version }})
+    运行于: ubuntu-latest
+    策略:
+      快速失败: false
+      矩阵:
+        python-version: ["3.9", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # 不下载 106 MB 全图：只用内置小图跑 CLI 的退出码/同名/参数错误/JSON 断言
+      - name: CLI 回归测试（无需完整图）
+        run: python scripts/smoke_test.py
+
+      # 可选：有图时再跑全图自检（手动触发，仓库内不保存图）
+      - name: 在真实图上自检（可选）
+        如果: ${{ github.event_name == 'workflow_dispatch' && vars.ACD_GRAPH_FROM_RELEASE == '1' }}
+        运行: |
+          curl -fL -o /tmp/acd.zip "${{ vars.ACD_GRAPH_ZIP_URL }}"
+          python scripts/query.py --graph /tmp/acd.zip --selfcheck
+          unzip -o /tmp/acd.zip -d /tmp/acdgraph
+          python scripts/verify_graph.py /tmp/acdgraph/acd_graph.json
