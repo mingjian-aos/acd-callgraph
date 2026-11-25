@@ -1,0 +1,17 @@
+[fixture] <tmp>\mini.json
+[case]
+  callees: 同名不合并             PASS
+  callers: 反向命中              PASS
+  callers: 裸名 callee         PASS
+  edge: 命中                   PASS
+  edge: 未命中 -> 1             PASS
+  参数缺值 -> 2                  PASS
+  缺图 -> 2                    PASS
+  selfcheck 不一致 -> 3         PASS
+  --json 可解析                 PASS
+  --json 结构（2 条边）            PASS
+  scripts/*.py 可编译           PASS
+  viewer 双语与同源               PASS
+  docs 中英数字一致                PASS
+
+汇总：13 项，FAIL 0

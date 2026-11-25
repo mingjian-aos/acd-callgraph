@@ -1,0 +1,5 @@
+[selfcheck] acd_graph.json
+   caller 键数 = 38,697（期望 38,697）
+   边总数     = 114,175（期望 114,175）
+   summary.total_edges = 114175
+   结论：PASS

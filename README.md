@@ -13,6 +13,8 @@
 
 > **全量图不在 git 里。** 全量 `acd_graph.json` 解压后 **106 MB**，从 **[Releases v4.0](https://github.com/mingjian-aos/acd-callgraph/releases/tag/v4.0)** 下载压缩包（约 **5.1 MiB**，附 MD5）。仓库内置查看器只有 3 个切片，不是全图；下载与校验说明见 [`FULL_GRAPH.md`](FULL_GRAPH.md)。
 
+> **验证状态（2026-11-26）：** 16/16 自洽判据、7/7 互证率、13/13 smoke test 全部 PASS；图 md5 `b357bf8e…`。命令与本次原始输出见 [`VERIFICATION.md`](VERIFICATION.md)。这不是第三方审计，是可复现的自洽校验。
+
 **先看 [`导读.md`](导读.md)**（英文：[`GUIDE.en.md`](GUIDE.en.md)） —— 三个结论数字、三样我们认为是稀缺的东西、以及我们没做到的部分。
 
 状态：**research preview**（研究预览）

@@ -1,0 +1,18 @@
+{
+  "static": 92892,
+  "runtime": 45187,
+  "both": 28782,
+  "only_runtime": 16405,
+  "only_static": 64110,
+  "rate_pct": 63.7,
+  "bare_rate_pct": 68.4
+}
+PASS  |both| = 28,782
+PASS  |S| = 92,892
+PASS  |R| = 45,187
+PASS  闭合 R = both + only_runtime
+PASS  闭合 S = both + only_static
+PASS  rate = 63.7%
+PASS  负例：裸名 join 必须不同（68.4%）
+
+7/7 PASS

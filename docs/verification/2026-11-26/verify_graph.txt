@@ -1,0 +1,21 @@
+[load] acd_graph.json
+[base] nodes=38697 edges=114175
+  1    PASS   非 static-reg reg_table 非空                            实测 941（目标 941±5，v2 基线）
+  2    PASS   reg_table 是 callee 名前缀                               实测 0 条
+  3    PASS   static-reg reg_table 非空 == 7,884                     实测 7884（总 8571，v2 基线）
+  4    PASS   static-reg reg_table 变量名 == 0                        实测 0
+  5    PASS   self_loop_class 覆盖 85 条                              total_loops=85 items=85
+  6    PASS   TRUE_RECURSION == 72                                 72
+  7    PASS   FALSE_POSITIVE 已删 == 11                              11
+  8    PASS   ADDR_ONLY == 1                                       1
+  9    PASS   ASM_NO_JUMP == 1                                     1
+  10   PASS   asm_layer.merged_edges == 逐条 asm                     summary=4878 逐条=4878
+  11   PASS   无 fm 的 HAS_INBOUND 标 no_file_map                     154/154（HAS_INBOUND 总 25420）
+  12   PASS   summary.coverage_stale/last_full == meta             summary=False/'2026-11-11T00:05:58' meta=False/'2026-11-11T00:05:58'
+  13   PASS   parse_coverage 可失败单测                                 解析覆盖单测 3 例全 PASS（用例未随仓分发）
+  14   PASS   边数 == 114,175                                        实测 114175（差 +0，v2 基线）
+  15   PASS   节点数 == 38,697                                        实测 38697（差 +0，v2 基线）
+  16   PASS   gap_class 五类                                         HAS_INBOUND=25420(期望25420) / DEAD_SUSPECT=2650(期望2650) / UNKNOWN_DYNAMIC=3611(期望3611) / NO_FILE_MAP=2444(期望2444) / UNKNOWN_ASM=4572(期望4572)
+
+==============================================================================
+汇总：总 16 / PASS 16 / FAIL 0

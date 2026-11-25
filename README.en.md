@@ -16,6 +16,11 @@ and not the engine that builds graphs.
 > The bundled viewer contains only 3 slices, not the full graph. Download and verification details:
 > [`FULL_GRAPH.md`](FULL_GRAPH.md).
 
+> **Verification status (2026-11-26):** 16/16 self-consistency checks, 7/7 matched-rate checks
+> and 13/13 smoke tests PASS; graph md5 `b357bf8e…`. Commands and raw output:
+> [`VERIFICATION.md`](VERIFICATION.md). This is reproducible self-consistency verification,
+> not a third-party audit.
+
 ![Viewer, English UI](docs/preview.en.jpg)
 
 <sub>English UI; the viewer switches language at runtime from the top bar (`中 / EN`). Chinese
