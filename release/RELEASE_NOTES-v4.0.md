@@ -1,5 +1,7 @@
 # Release · v4.0（2026-11-24）· ACD 多源合流调用图
 
+> 验证状态（2026-11-26）：16/16 自洽、7/7 互证率、13/13 smoke test PASS；图 md5 `b357bf8e…`。命令与原始输出：https://github.com/mingjian-aos/acd-callgraph/blob/main/VERIFICATION.md 。这不是第三方审计。
+
 > 本文件是发布正文草稿，上传 Release 时整段粘贴。图与分母的实际字节数、md5 见 `MANIFEST.txt`。
 
 ## 附件
