@@ -11,11 +11,17 @@ validated end to end on FFmpeg 9.1-dev (`818cecc6e1`, MinGW-w64 / x86_64).
 **Research preview.** This repository ships **data, methodology and verifiers** — not a product,
 and not the engine that builds graphs.
 
+> **The full graph is not in git.** Download `acd_graph.json` (**106 MB** unpacked; Release zip
+> ~**5.1 MiB**, with MD5) from **[Releases v4.0](https://github.com/mingjian-aos/acd-callgraph/releases/tag/v4.0)**.
+> The bundled viewer contains only 3 slices, not the full graph. Download and verification details:
+> [`FULL_GRAPH.md`](FULL_GRAPH.md).
+
 ![Viewer, English UI](docs/preview.en.jpg)
 
 <sub>English UI; the viewer switches language at runtime from the top bar (`中 / EN`). Chinese
 screenshot: [`docs/preview.jpg`](docs/preview.jpg). Only **3 slices** are embedded — 414 nodes /
-1,147 edges, i.e. 1.07% / 1.00% of the full graph, not the whole graph.</sub>
+1,147 edges, i.e. 1.07% / 1.00% of the full graph, not the whole graph. Full graph:
+[Releases v4.0](https://github.com/mingjian-aos/acd-callgraph/releases/tag/v4.0).</sub>
 
 ## Numbers (edge / node / source counts recomputable from the shipped graph)
 
@@ -35,7 +41,7 @@ and reusing the word invites a wrong comparison with gcov.
 
 ## What is in the box
 
-- `release/acd-ffmpeg-n9.1-dev-b357bf8e.zip` — the Release package containing the full graph (graph md5 `b357bf8e…`, 106,072,639 B inside), never committed to git.
+- **Full graph** — `acd_graph.json` (106,072,639 B inside; graph md5 `b357bf8e…`) is distributed only in the Release asset [`acd-ffmpeg-n9.1-dev-b357bf8e.zip`](https://github.com/mingjian-aos/acd-callgraph/releases/tag/v4.0), never committed to git.
 - `viewer/acd-viewer.html` — single file, fully offline; it renders a **slice** (414 nodes / 1,147 edges), not the whole graph.
 - `scripts/` — `verify_graph.py` (16 self-consistency checks), `denominator_recompute.py`, `export_views.py`, `verify_matched_rate.py`, `query.py`, `smoke_test.py`.
 - `report/`, `docs/` — the full report ([English](report/ACD-ffmpeg-report-v4.0.en.md) / [Chinese](report/ACD-ffmpeg-报告-v4.0.md)), metric definitions ([`docs/caliber.en.md`](docs/caliber.en.md) / [`docs/caliber.md`](docs/caliber.md)), reproduction parameters (`docs/reproduce.md`).

@@ -11,6 +11,8 @@
 
 > 在 **FFmpeg 9.1-dev**（`n9.1-dev-1030-g818cecc6`）上的实证：**一个函数级调用图，能同时回答三件事——谁调用谁、还有谁在调用、哪一行发起的调用。**
 
+> **全量图不在 git 里。** 全量 `acd_graph.json` 解压后 **106 MB**，从 **[Releases v4.0](https://github.com/mingjian-aos/acd-callgraph/releases/tag/v4.0)** 下载压缩包（约 **5.1 MiB**，附 MD5）。仓库内置查看器只有 3 个切片，不是全图；下载与校验说明见 [`FULL_GRAPH.md`](FULL_GRAPH.md)。
+
 **先看 [`导读.md`](导读.md)**（英文：[`GUIDE.en.md`](GUIDE.en.md)） —— 三个结论数字、三样我们认为是稀缺的东西、以及我们没做到的部分。
 
 状态：**research preview**（研究预览）
@@ -26,7 +28,7 @@ issue 只开两条通道：
 
 ![调用图查看器](docs/preview.jpg)
 
-<sub>中文界面。查看器顶栏可随时切 `中 / EN`，英文首屏见 [`docs/preview.en.jpg`](docs/preview.en.jpg)。注意内置只有 **3 个切片**（合计 414 节点 / 1,147 边，占全图 1.07% / 1.00%），不是全图。</sub>
+<sub>中文界面。查看器顶栏可随时切 `中 / EN`，英文首屏见 [`docs/preview.en.jpg`](docs/preview.en.jpg)。注意内置只有 **3 个切片**（合计 414 节点 / 1,147 边，占全图 1.07% / 1.00%），不是全图；全图请到 [Releases v4.0](https://github.com/mingjian-aos/acd-callgraph/releases/tag/v4.0) 下载。</sub>
 
 ---
 
